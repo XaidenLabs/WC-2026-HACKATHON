@@ -1,0 +1,21 @@
+{
+  "name": "whistl-derisk",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "De-risk spikes for WHISTL: prove the TxLINE data + on-chain validate_stat pipeline works before building the full app.",
+  "scripts": {
+    "auth": "node 01-auth.mjs",
+    "activate": "node 02-subscribe-activate.mjs",
+    "fetch-proof": "node 03-fetch-proof.mjs",
+    "validate": "node 04-validate-onchain.mjs"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
+    "@solana/spl-token": "^0.4.14",
+    "@solana/web3.js": "^1.98.4",
+    "bs58": "^6.0.0",
+    "dotenv": "^17.4.2",
+    "tweetnacl": "^1.0.3"
+  }
+}

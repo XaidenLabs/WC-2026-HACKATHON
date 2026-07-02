@@ -1,0 +1,27 @@
+# Secrets
+.env
+.env.local
+*.keypair.json
+id.json
+
+# Node
+node_modules/
+dist/
+.next/
+out/
+
+# Rust / Anchor
+target/
+.anchor/
+test-ledger/
+
+# Misc
+.DS_Store
+*.log
+
+# Local scratch scripts with hardcoded keys — NEVER commit
+scratch_fund.js
+**/scratch_fund.js
+
+# Vendored Rust deps (regenerable via cargo vendor)
+whistl/vendor/

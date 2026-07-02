@@ -1,0 +1,23 @@
+[package]
+name = "whistl"
+version = "0.1.0"
+description = "Created with USO"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "whistl"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+custom-heap = []
+custom-panic = []
+
+[dependencies]
+anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }
+anchor-spl = "0.32.1"

@@ -1,0 +1,48 @@
+{
+  "name": "WHISTL — World Cup, live with AI",
+  "short_name": "WHISTL",
+  "description": "Your AI World Cup companion: live commentary, sharp-money alerts, and one-tap fan games — powered by real TxLINE data. Plus trustless prop bets settled by proof.",
+  "start_url": "/pulse",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#c0f400",
+  "orientation": "portrait-primary",
+  "categories": ["sports", "entertainment", "finance"],
+  "icons": [
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pulse Feed",
+      "short_name": "Pulse",
+      "description": "Live AI commentary for every World Cup match",
+      "url": "/pulse",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Hi-Lo Game",
+      "short_name": "Hi-Lo",
+      "description": "Higher or lower? One-tap fan game",
+      "url": "/pulse/hilo",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Live Markets",
+      "short_name": "Markets",
+      "description": "Trustless prop bets, settled by proof",
+      "url": "/matches",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "trader — TxAgent Desk (Next.js 16)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "apps/trader",
+      "port": 3000,
+      "autoPort": false
+    },
+    {
+      "name": "app — WHISTL frontend (Next.js 16)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "app",
+      "port": 3000,
+      "autoPort": false
+    },
+    {
+      "name": "whistl/app — old scaffold (Next.js 12, superseded)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "-p", "3001"],
+      "cwd": "whistl/app",
+      "port": 3001
+    }
+  ]
+}

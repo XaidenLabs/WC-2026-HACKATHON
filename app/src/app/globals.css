@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+/* WHISTL — "Verifiable Terminal". Tokens mirror brand.md. */
+@theme {
+  --color-ink: #0a0b0d;
+  --color-ink-2: #111317;
+  --color-ink-3: #171a1f;
+  --color-line: #22262e;
+  --color-text: #eceef1;
+  --color-text-dim: #8a929e;
+  --color-signal: #c6f24e;
+  --color-live: #ff4d4d;
+  --color-win: #4ade80;
+  --color-lose: #5b6472;
+  --color-proof: #7c5cff;
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-ink);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Tabular numerics wherever we use mono (odds, stakes, hashes, timestamps). */
+.font-mono,
+code,
+kbd,
+samp {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Faint terminal grid — subtle structure, never glow. */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--color-line) 50%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--color-line) 50%, transparent) 1px, transparent 1px);
+  background-size: 46px 46px;
+}
+
+/* Entrance — reduced-motion safe. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes whistl-rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .animate-rise {
+    animation: whistl-rise 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes whistl-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  .animate-livedot {
+    animation: whistl-pulse 1.6s ease-in-out infinite;
+  }
+}
