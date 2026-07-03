@@ -20,6 +20,7 @@
     "@solana/sysvars": "^6.10.0",
     "@solana/web3.js": "^1.98.4",
     "@supabase/supabase-js": "^2.108.2",
+    "bs58": "^4.0.1",
     "buffer": "^6.0.3",
     "clsx": "^2.1.1",
     "lucide-react": "^1.21.0",
