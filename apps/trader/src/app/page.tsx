@@ -68,7 +68,8 @@ export default function TradingDesk() {
     { time: "--:--:--", msg: "TxAgent runtime online.", type: "info" },
     { time: "--:--:--", msg: "Connecting to TxLINE decentralized feed…", type: "info" },
   ]);
-  const logEnd = useRef<HTMLDivElement>(null);
+  const termRef = useRef<HTMLDivElement>(null);
+  const stickToBottom = useRef(true);
   const addLog = (msg: string, type: LogType = "info") =>
     setLogs((p) => [...p, { time: new Date().toLocaleTimeString(), msg, type }]);
   useEffect(() => {
@@ -78,7 +79,12 @@ export default function TradingDesk() {
       { time: new Date().toLocaleTimeString(), msg: "Describe a strategy in plain English to begin.", type: "info" },
     ]);
   }, []);
-  useEffect(() => { logEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [logs]);
+  // Auto-scroll to the newest line ONLY if you're already at the bottom — so scrolling up to
+  // read earlier logs isn't yanked back down by incoming ones.
+  useEffect(() => {
+    const el = termRef.current;
+    if (el && stickToBottom.current) el.scrollTop = el.scrollHeight;
+  }, [logs]);
 
   // ── Strategy compose + compile ───────────────────────────────────────────────
   const [text, setText] = useState("");
@@ -318,7 +324,12 @@ export default function TradingDesk() {
             <div className="flex items-center gap-2 border-b border-white/5 bg-[#0d0d0d] px-4 py-2 text-xs tracking-widest text-gray-400">
               <SquareTerminal className="size-3" /> AGENT TERMINAL
             </div>
-            <div className="flex-1 overflow-y-auto p-4 text-[11px] leading-relaxed">
+            <div ref={termRef}
+              onScroll={(e) => {
+                const el = e.currentTarget;
+                stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+              }}
+              className="flex-1 overflow-y-auto p-4 text-[11px] leading-relaxed">
               {logs.map((l, i) => (
                 <div key={i} className="mb-2 flex items-start gap-2">
                   <span className="shrink-0 text-gray-700">[{l.time}]</span>
@@ -332,7 +343,6 @@ export default function TradingDesk() {
                   </span>
                 </div>
               ))}
-              <div ref={logEnd} />
             </div>
             <div className="flex items-center gap-2 border-t border-white/10 p-3 text-xs text-gray-600">
               <ArrowRight className="size-3" /><span className="animate-pulse">_</span>
