@@ -293,7 +293,7 @@ export default function TradingDesk() {
         </section>
 
         {/* Right: live markets + terminal */}
-        <section className="flex w-1/3 flex-col bg-black">
+        <section className="flex min-h-0 w-1/3 flex-col bg-black">
           <Panel icon={<TrendingUp className="size-3" />} title="TRADEABLE MARKETS · LIVE + UPCOMING">
             <div className="max-h-60 overflow-y-auto p-3 space-y-1.5">
               {markets.length === 0 && !marketsError && <p className="p-3 text-[11px] text-gray-600">Loading fixtures…</p>}
@@ -318,7 +318,7 @@ export default function TradingDesk() {
             </div>
           </Panel>
 
-          <div className="flex flex-1 flex-col border-t border-white/10">
+          <div className="flex min-h-0 flex-1 flex-col border-t border-white/10">
             <div className="flex items-center gap-2 border-b border-white/5 bg-[#0d0d0d] px-4 py-2 text-xs tracking-widest text-gray-400">
               <SquareTerminal className="size-3" /> AGENT TERMINAL
             </div>
@@ -327,7 +327,7 @@ export default function TradingDesk() {
                 const el = e.currentTarget;
                 stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
               }}
-              className="flex-1 overflow-y-auto p-4 text-[11px] leading-relaxed">
+              className="min-h-0 flex-1 overflow-y-auto p-4 text-[11px] leading-relaxed">
               {logs.map((l, i) => (
                 <div key={i} className="mb-2 flex items-start gap-2">
                   <span className="shrink-0 text-gray-700">[{l.time}]</span>
