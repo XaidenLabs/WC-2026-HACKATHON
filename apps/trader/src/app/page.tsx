@@ -134,11 +134,12 @@ export default function TradingDesk() {
   }
 
   // ── Deploy live + on-chain ledger ────────────────────────────────────────────
-  const { data: ledgerData, mutate: mutateLedger } = useSWR<{ ok: boolean; calls: LedgerCall[]; record?: LedgerRecord }>(
+  const { data: ledgerData, mutate: mutateLedger } = useSWR<{ ok: boolean; calls: LedgerCall[]; record?: LedgerRecord; metrics?: LedgerMetrics }>(
     "/api/agent/ledger", fetcher, { refreshInterval: 20_000 },
   );
   const ledger = ledgerData?.calls ?? [];
   const record = ledgerData?.record;
+  const metrics = ledgerData?.metrics;
   const [deploying, setDeploying] = useState(false);
 
   async function deploy() {
@@ -153,9 +154,14 @@ export default function TradingDesk() {
       const j = await r.json();
       if (!j.ok) { addLog("Deploy failed: " + j.error, "error"); return; }
       if (j.inscribed === 0) {
-        addLog(`Agent armed — no entry signal across ${j.scanned} live markets right now.`, "warn");
+        addLog(`No open markets to price right now — agent is armed and watching.`, "warn");
       } else {
-        addLog(`✓ Agent fired on ${j.fired} market${j.fired !== 1 ? "s" : ""} · ${j.inscribed} call${j.inscribed !== 1 ? "s" : ""} inscribed on Solana.`, "success");
+        addLog(
+          j.bestFit
+            ? `✓ No strict signal — agent took its ${j.inscribed} best-fit position${j.inscribed !== 1 ? "s" : ""}, inscribed on Solana.`
+            : `✓ Agent fired on ${j.fired} signal${j.fired !== 1 ? "s" : ""} · ${j.inscribed} call${j.inscribed !== 1 ? "s" : ""} inscribed on Solana.`,
+          "success",
+        );
         (j.calls as LedgerCall[]).forEach((c) =>
           addLog(`◉ ${c.match} — ${c.side.toUpperCase()} ${c.selection} @ ${c.odds} · tx ${c.signature.slice(0, 12)}…`, "success"));
         mutateLedger();
@@ -260,18 +266,7 @@ export default function TradingDesk() {
                 </button>
               </div>
 
-              {record && (record.won + record.lost > 0) && (
-                <div className="mt-3 flex items-center gap-3 rounded-lg border border-white/10 bg-black px-3 py-2 font-mono text-[11px]">
-                  <span className="text-gray-500">ORA&apos;s on-chain record:</span>
-                  <span className="font-bold text-emerald-400">{record.won}W</span>
-                  <span className="text-gray-600">·</span>
-                  <span className="font-bold text-red-400">{record.lost}L</span>
-                  {record.pending > 0 && <><span className="text-gray-600">·</span><span className="text-gray-500">{record.pending} pending</span></>}
-                  <span className="ml-auto text-emerald-500">
-                    {Math.round((record.won / (record.won + record.lost)) * 100)}% hit rate
-                  </span>
-                </div>
-              )}
+              {metrics && <WalletDashboard metrics={metrics} record={record} />}
 
               {ledger.length === 0 ? (
                 <div className="mt-4 flex h-32 items-center justify-center rounded-lg border border-dashed border-white/10 px-4 text-center text-xs text-gray-600">
@@ -342,6 +337,16 @@ export default function TradingDesk() {
 
 type CallStatus = "won" | "lost" | "pending";
 type LedgerRecord = { won: number; lost: number; pending: number };
+type LedgerMetrics = {
+  startingBankroll: number;
+  bankroll: number;
+  netPnl: number;
+  staked: number;
+  roi: number;
+  hitRate: number;
+  settled: number;
+  equity: { i: number; bankroll: number }[];
+};
 type LedgerCall = {
   strategy: string;
   match: string;
@@ -351,10 +356,59 @@ type LedgerCall = {
   reasoning: string;
   status: CallStatus;
   finalScore: string | null;
+  pnl: number | null;
+  stake: number;
   timestamp: number;
   signature: string;
   explorerUrl: string;
 };
+
+function WalletDashboard({ metrics, record }: { metrics: LedgerMetrics; record?: LedgerRecord }) {
+  const up = metrics.bankroll >= metrics.startingBankroll;
+  return (
+    <div className="mt-4 rounded-lg border border-emerald-500/20 bg-emerald-500/[0.03] p-4">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <p className="text-[9px] uppercase tracking-wider text-gray-500">ORA Wallet · bankroll</p>
+          <p className={cn("mt-0.5 font-mono text-2xl font-bold tabular-nums", up ? "text-emerald-400" : "text-red-400")}>
+            {metrics.bankroll.toFixed(2)} <span className="text-xs font-normal text-gray-500">USDC</span>
+          </p>
+          <p className="text-[10px] text-gray-500">
+            {metrics.startingBankroll} start ·{" "}
+            <span className={metrics.netPnl >= 0 ? "text-emerald-400" : "text-red-400"}>
+              {metrics.netPnl >= 0 ? "+" : ""}{metrics.netPnl} P&amp;L
+            </span>
+          </p>
+        </div>
+        <div className="space-y-0.5 text-right font-mono text-[10px] text-gray-500">
+          <p>
+            <span className="font-bold text-emerald-400">{record?.won ?? 0}W</span> ·{" "}
+            <span className="font-bold text-red-400">{record?.lost ?? 0}L</span>
+            {record?.pending ? ` · ${record.pending} open` : ""}
+          </p>
+          <p>hit rate <span className="text-white">{Math.round(metrics.hitRate * 100)}%</span></p>
+          <p>return <span className={metrics.roi >= 0 ? "text-emerald-400" : "text-red-400"}>{metrics.roi >= 0 ? "+" : ""}{(metrics.roi * 100).toFixed(1)}%</span></p>
+        </div>
+      </div>
+      {metrics.equity.length > 1 ? (
+        <div className="mt-3 h-20 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={metrics.equity}>
+              <ReferenceLine y={metrics.startingBankroll} stroke="#333" strokeDasharray="3 3" />
+              <YAxis hide domain={["auto", "auto"]} />
+              <XAxis dataKey="i" hide />
+              <Tooltip contentStyle={{ backgroundColor: "#000", borderColor: "#333", fontSize: 10, fontFamily: "monospace" }}
+                formatter={(v) => [`${v} USDC`, "Balance"]} labelFormatter={() => ""} />
+              <Line type="monotone" dataKey="bankroll" stroke={up ? "#10b981" : "#f43f5e"} strokeWidth={2} dot={false} isAnimationActive />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      ) : (
+        <p className="mt-2 text-[10px] text-gray-600">Balance updates automatically as ORA&apos;s calls settle against real results.</p>
+      )}
+    </div>
+  );
+}
 
 function StatusChip({ status, score }: { status: CallStatus; score: string | null }) {
   if (status === "won")
@@ -376,6 +430,11 @@ function LedgerCard({ c }: { c: LedgerCall }) {
       </div>
       <p className="mt-1 text-[11px] font-medium text-emerald-400">
         {sideVerb(c.side)} {selectionShort(c.selection)} · pays {oddsLabel(c.odds)}
+        {c.pnl != null && (
+          <span className={cn("ml-2 font-bold", c.pnl >= 0 ? "text-emerald-400" : "text-red-400")}>
+            {c.pnl >= 0 ? "+" : ""}{c.pnl} USDC
+          </span>
+        )}
       </p>
       <p className="mt-1 text-[11px] italic leading-relaxed text-gray-400">“{c.reasoning}”</p>
       <div className="mt-2 flex items-center justify-between text-[9px]">
