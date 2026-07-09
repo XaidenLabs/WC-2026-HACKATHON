@@ -1,8 +1,19 @@
+// ORA Sentinel — autonomous match-watching and settlement engine.
+//
+// Two modes:
+//   replay  → play back historical TxLINE score events at speed (perfect for demo)
+//   live    → poll /api/scores/snapshot every 30s for actual live matches
+//
+// When a stat is mathematically locked (e.g. 3 goals at 70' = "total > 2" can never flip)
+// ORA early-settles without waiting for FT. When the match ends, it settles all remaining
+// open pacts by fetching the Merkle proof and calling validate_stat + settle_pact.
+
 import { getScoresSnapshot } from "@/lib/txline/server";
 import { parseCurrentScore } from "@/lib/txline/types";
 import type { TxScoreEvent } from "@/lib/txline/types";
 import type { PactTermsArgs } from "@/lib/whistl/program";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 export type KeeperEventKind =
   | "init"

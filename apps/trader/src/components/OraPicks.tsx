@@ -58,12 +58,16 @@ function PickCard({
   authed: boolean;
 }) {
   const payout = payoutOn(stake, p.pick.dec);
+  const val = p.pick.value;
   const tierColor =
-    p.pick.tier === "banker" ? "text-emerald-400" : p.pick.tier === "value" ? "text-amber-400" : "text-sky-400";
+    p.pick.tier === "strong" ? "text-emerald-400"
+      : p.pick.tier === "value" ? "text-emerald-400"
+      : p.pick.tier === "slim" ? "text-sky-400" : "text-gray-500";
+  const edgeStr = `${p.pick.edge >= 0 ? "+" : ""}${p.pick.edge}pp edge · EV ${p.pick.evPct >= 0 ? "+" : ""}${p.pick.evPct}%`;
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-white/10 bg-[#0a0a0a] p-4 transition-colors hover:border-white/20 sm:flex-row sm:items-center sm:justify-between">
-      {/* Match + ORA's pick */}
+      {/* Match + ORA's read */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-gray-500">
           <span className="truncate">{p.competition}</span>
@@ -75,29 +79,34 @@ function PickCard({
           {p.p1} <span className="text-gray-600">v</span> {p.p2}
         </Link>
         <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[13px]">
-          <span className="flex items-center gap-1 font-medium text-emerald-400">
-            <Brain className="size-3.5" /> ORA backs {p.pick.team}
+          <span className={cn("flex items-center gap-1 font-medium", val ? "text-emerald-400" : "text-gray-400")}>
+            <Brain className="size-3.5" /> {val ? `ORA backs ${p.pick.team}` : "ORA passes"}
           </span>
           <span className={cn("rounded bg-white/5 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider", tierColor)}>
             {p.pick.confidence}
           </span>
-          <span className="text-gray-500">{p.pick.prob}% · pays {p.pick.dec.toFixed(2)}×</span>
+          {val && <span className="text-gray-500">{p.pick.prob}% model · {edgeStr}</span>}
         </p>
+        <p className="mt-1 text-[11px] italic leading-snug text-gray-500">{p.pick.reasoning}</p>
       </div>
 
-      {/* One-tap back */}
+      {/* One-tap back, or a disciplined pass */}
       <div className="flex shrink-0 items-center gap-2">
         <Link href={`/market/${p.fixtureId}`} className="hidden text-[11px] text-gray-500 hover:text-white sm:flex sm:items-center sm:gap-1">
           chart <ArrowRight className="size-3" />
         </Link>
-        <button
-          onClick={() => onBack({ fixtureId: p.fixtureId, match: `${p.p1} v ${p.p2}`, selection: p.pick.selection, odds: p.pick.dec, stake })}
-          disabled={pending}
-          className="flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-bold text-black transition-colors hover:bg-emerald-400 disabled:opacity-60">
-          {pending ? <><Loader2 className="size-4 animate-spin" /> Backing…</>
-            : !authed ? <><Lock className="size-3.5" /> Sign in to back</>
-            : <><Check className="size-4" /> Back {stake} → win {payout}</>}
-        </button>
+        {val ? (
+          <button
+            onClick={() => onBack({ fixtureId: p.fixtureId, match: `${p.p1} v ${p.p2}`, selection: p.pick.selection, odds: p.pick.dec, stake })}
+            disabled={pending}
+            className="flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-bold text-black transition-colors hover:bg-emerald-400 disabled:opacity-60">
+            {pending ? <><Loader2 className="size-4 animate-spin" /> Backing…</>
+              : !authed ? <><Lock className="size-3.5" /> Sign in to back</>
+              : <><Check className="size-4" /> Back {stake} → win {payout}</>}
+          </button>
+        ) : (
+          <span className="rounded-lg border border-white/10 px-4 py-2.5 text-xs font-medium text-gray-500">No value · standing aside</span>
+        )}
       </div>
     </div>
   );

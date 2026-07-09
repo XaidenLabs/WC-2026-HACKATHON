@@ -156,35 +156,49 @@ export default function MarketPage() {
           <p className="text-sm leading-relaxed text-gray-300">{oraRead}</p>
         </div>
 
-        {/* ORA's call — one-tap back (primary) */}
+        {/* ORA's match-winner call — model read + one-tap back (or a disciplined pass) */}
         {pick && pickTeam && (
-          <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.05] p-4">
-            <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-emerald-400">
-              <Brain className="size-3.5" /> ORA&apos;s call · {pick.confidence}
-            </p>
+          <div className={cn("mt-3 rounded-xl border p-4", pick.value ? "border-emerald-500/30 bg-emerald-500/[0.05]" : "border-white/10 bg-[#0a0a0a]")}>
+            <div className="flex items-center justify-between">
+              <p className={cn("flex items-center gap-1.5 text-[10px] uppercase tracking-wider", pick.value ? "text-emerald-400" : "text-gray-400")}>
+                <Brain className="size-3.5" /> ORA&apos;s call · {pick.confidence}
+              </p>
+              {pick.value && (
+                <span className="font-mono text-[10px] text-gray-500">model {pick.prob}% vs market {pick.marketProb}% · EV {pick.evPct >= 0 ? "+" : ""}{pick.evPct}%</span>
+              )}
+            </div>
             <p className="mt-1 text-sm text-gray-200">
-              ORA backs <span className="font-bold text-white">{pickTeam}</span> · {pick.prob}% chance · pays {pick.dec.toFixed(2)}×
+              {pick.value ? <>ORA backs <span className="font-bold text-white">{pickTeam}</span> at {pick.dec.toFixed(2)}×, a +{pick.edge}pp edge on the market.</> : "ORA sees no value here."}
             </p>
-            <button
-              onClick={() => back({ fixtureId, match: `${p1} v ${p2}`, selection: pick.selection, odds: pick.dec })}
-              disabled={backing}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-500 py-3 text-sm font-bold text-black hover:bg-emerald-400 disabled:opacity-60">
-              {backing ? <><Loader2 className="size-4 animate-spin" /> Backing…</>
-                : !authenticated ? <><Lock className="size-3.5" /> Sign in to back ORA</>
-                : <><Check className="size-4" /> Back ORA · 50 USDC → win {payoutOn(50, pick.dec)}</>}
-            </button>
+            <p className="mt-1 text-[11px] italic leading-snug text-gray-500">{pick.reasoning}</p>
+            {pick.value ? (
+              <button
+                onClick={() => back({ fixtureId, match: `${p1} v ${p2}`, selection: pick.selection, odds: pick.dec })}
+                disabled={backing}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-500 py-3 text-sm font-bold text-black hover:bg-emerald-400 disabled:opacity-60">
+                {backing ? <><Loader2 className="size-4 animate-spin" /> Backing…</>
+                  : !authenticated ? <><Lock className="size-3.5" /> Sign in to back ORA</>
+                  : <><Check className="size-4" /> Back ORA · 50 USDC → win {payoutOn(50, pick.dec)}</>}
+              </button>
+            ) : (
+              <p className="mt-3 rounded-lg border border-white/10 py-2.5 text-center text-xs text-gray-500">ORA stands aside on the match winner</p>
+            )}
           </div>
         )}
 
-        {/* ORA's goals call — Over/Under (one-tap back) */}
-        {goalsPick && (
+        {/* ORA's goals call — Over/Under */}
+        {goalsPick && goalsPick.value && (
           <div className="mt-2 rounded-xl border border-sky-500/30 bg-sky-500/[0.05] p-4">
-            <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-sky-400">
-              <Brain className="size-3.5" /> Goals · total over/under
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-sky-400">
+                <Brain className="size-3.5" /> Goals · {goalsPick.confidence}
+              </p>
+              <span className="font-mono text-[10px] text-gray-500">EV {goalsPick.evPct >= 0 ? "+" : ""}{goalsPick.evPct}%</span>
+            </div>
             <p className="mt-1 text-sm text-gray-200">
-              ORA leans <span className="font-bold text-white">{goalsPick.label} goals</span> · {goalsPick.prob}% chance · pays {goalsPick.dec.toFixed(2)}×
+              ORA backs <span className="font-bold text-white">{goalsPick.label} goals</span> at {goalsPick.dec.toFixed(2)}×.
             </p>
+            <p className="mt-1 text-[11px] italic leading-snug text-gray-500">{goalsPick.reasoning}</p>
             <button
               onClick={() => back({ fixtureId, match: `${p1} v ${p2}`, selection: goalsPick.selection, odds: goalsPick.dec, market: "goals_ou", line: goalsPick.line })}
               disabled={backing}

@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::{instruction::Instruction, program::invoke};
 use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 
-declare_id!("BZ2pNdsvpYmeC3dfLKzpKWKqqqKxPBHMPTYr3qVTMRTz");
+declare_id!("9xe1gCVh7kNqjfRbidVUpWBcS2A4EstvkBMkxc34LWRR");
 
 // TxLINE Program ID
 pub mod txoracle {
@@ -178,7 +178,10 @@ pub mod whistl {
         require_keys_eq!(returning_program, txoracle::ID, WhistlError::InvalidReturnDataProgram);
         require!(!return_data.is_empty(), WhistlError::NoReturnData);
 
-        // false can mean bad proof OR predicate not met — treat both as counterparty wins.
+        // validate_stat Merkle-verifies the stat against the on-chain daily_scores_merkle_roots
+        // and reverts on an invalid proof, so a returned `false` is an AUTHENTICATED
+        // "predicate not met", not an unverified guess. Combined with the non-empty-proof guard
+        // above, this means the counterparty only wins on a proven-negative outcome.
         let result: bool = return_data[0] != 0;
 
         // Payout — full pot (creator_stake + counterparty_stake) goes to winner
@@ -324,12 +327,12 @@ pub struct SettlePact<'info> {
     #[account(mut)]
     pub pact: Account<'info, Pact>,
 
-    /// CHECK: verified below via has_one on pact
-    #[account(mut)]
+    // Payout accounts are constrained to be OWNED by the real pact parties, so a
+    // permissionless settler cannot redirect the pot to an account it controls.
+    #[account(mut, constraint = creator_token.owner == pact.creator @ WhistlError::WrongTokenOwner)]
     pub creator_token: Account<'info, TokenAccount>,
 
-    /// CHECK: verified below via has_one on pact
-    #[account(mut)]
+    #[account(mut, constraint = pact.counterparty == Some(counterparty_token.owner) @ WhistlError::WrongTokenOwner)]
     pub counterparty_token: Account<'info, TokenAccount>,
 
     #[account(
@@ -456,6 +459,8 @@ pub enum WhistlError {
     InvalidReturnDataProgram,
     #[msg("Proof must be non-empty to settle")]
     EmptyProof,
+    #[msg("Payout token account is not owned by the pact party")]
+    WrongTokenOwner,
 }
 
 // ----------------------------------------------------

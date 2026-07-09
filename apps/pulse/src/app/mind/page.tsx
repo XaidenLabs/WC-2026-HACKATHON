@@ -1,7 +1,9 @@
 "use client";
 
 import useSWR from "swr";
-import { Sparkles, TrendingUp, ExternalLink, CheckCircle, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { Sparkles, TrendingUp, ExternalLink, CheckCircle, Loader2, Share2, Check, Zap } from "lucide-react";
 
 const fetcher = (url: string) =>
   fetch(url).then(async (r) => {
@@ -59,6 +61,9 @@ export default function MindPage() {
         </div>
       )}
 
+      {/* ORA Pro — monetization surface */}
+      <ProCard />
+
       {isLoading && !data && (
         <div className="flex justify-center py-16"><Loader2 className="size-5 animate-spin text-text-dim" /></div>
       )}
@@ -109,18 +114,60 @@ function Entry({ e }: { e: MindEntry }) {
           </span>
           <span className="font-mono text-[9px] text-text-dim">{timeAgo(e.timestamp)}</span>
         </div>
-        <p className="text-sm font-semibold leading-snug text-text">{e.title}</p>
+        <Link href={`/mind/${e.signature}`} className="block text-sm font-semibold leading-snug text-text hover:text-signal">{e.title}</Link>
         {e.body && <p className="mt-1 text-xs leading-relaxed text-text-dim">{e.body}</p>}
         <div className="mt-2 flex items-center justify-between text-[9px]">
           <span className="truncate font-mono text-text-dim">{e.tag}</span>
-          <a href={e.explorerUrl} target="_blank" rel="noopener noreferrer"
-            className="flex shrink-0 items-center gap-1 font-mono text-text-dim transition-colors hover:text-signal group">
-            <CheckCircle className="size-2.5 text-proof" />
-            <span className="group-hover:hidden">Verified ✓</span>
-            <span className="hidden group-hover:inline">{e.signature.slice(0, 6)}… <ExternalLink className="size-2.5 inline" /></span>
-          </a>
+          <div className="flex shrink-0 items-center gap-3">
+            <ShareButton signature={e.signature} />
+            <a href={e.explorerUrl} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-1 font-mono text-text-dim transition-colors hover:text-signal group">
+              <CheckCircle className="size-2.5 text-proof" />
+              <span className="group-hover:hidden">Verified ✓</span>
+              <span className="hidden group-hover:inline">{e.signature.slice(0, 6)}… <ExternalLink className="size-2.5 inline" /></span>
+            </a>
+          </div>
         </div>
       </article>
+    </div>
+  );
+}
+
+function ShareButton({ signature }: { signature: string }) {
+  const [copied, setCopied] = useState(false);
+  const share = async (ev: React.MouseEvent) => {
+    ev.preventDefault();
+    const url = `${window.location.origin}/mind/${signature}`;
+    try {
+      if (navigator.share) await navigator.share({ title: "ORA's call · WHISTL Pulse", url });
+      else { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 1500); }
+    } catch { /* user dismissed */ }
+  };
+  return (
+    <button onClick={share} className="flex items-center gap-1 font-mono text-text-dim transition-colors hover:text-signal">
+      {copied ? <><Check className="size-2.5" /> Copied</> : <><Share2 className="size-2.5" /> Share</>}
+    </button>
+  );
+}
+
+function ProCard() {
+  return (
+    <div className="mb-5 overflow-hidden rounded-xl border border-signal/30 bg-signal/[0.04] p-4">
+      <div className="flex items-center gap-1.5">
+        <Zap className="size-4 text-signal" aria-hidden />
+        <span className="font-mono text-[10px] uppercase tracking-wider text-signal">ORA Pro</span>
+      </div>
+      <p className="mt-1.5 text-sm font-semibold text-text">Real-time alerts and ORA&apos;s premium value picks</p>
+      <p className="mt-1 text-xs leading-relaxed text-text-dim">
+        Instant goal and odds-swing push the second they happen, ORA&apos;s highest-conviction calls, and
+        priority sweepstake seats. Free tier stays public and verifiable, forever.
+      </p>
+      <div className="mt-3 flex items-center gap-3">
+        <button className="rounded-md bg-signal px-3.5 py-2 text-xs font-bold text-ink transition-opacity hover:opacity-90">
+          Go Pro · $4.99/mo
+        </button>
+        <span className="font-mono text-[10px] text-text-dim">or earn it: win a sweepstake</span>
+      </div>
     </div>
   );
 }

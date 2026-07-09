@@ -5,6 +5,7 @@ import { ArrowLeft, Brain, Radio } from "lucide-react";
 import Header from "@/components/Header";
 import StrategyStudio from "@/components/StrategyStudio";
 import AgentLedger from "@/components/AgentLedger";
+import OraAutopilot from "@/components/OraAutopilot";
 
 // ORA command center — the global agent hub. Compose + backtest + deploy across every live
 // market, and audit ORA's full verifiable P&L (bankroll, equity curve, on-chain call history).
@@ -24,11 +25,16 @@ export default function OraCommandCenter() {
           <div>
             <h1 className="font-sans text-2xl font-bold text-white">ORA · Command Center</h1>
             <p className="mt-2 max-w-2xl font-sans text-sm leading-relaxed text-gray-400">
-              The always-on AI counterparty. Compose a strategy, backtest it on real World Cup data, and
-              deploy ORA across every live market. Every decision is inscribed on Solana and settled by a
-              TxLINE proof · a glass-skull track record nobody can edit.
+              The always-on AI counterparty. Arm the autopilot and ORA trades its value model on its own,
+              or compose your own strategy and deploy it. Every decision is inscribed on Solana and settled
+              by a TxLINE proof, a glass-skull track record nobody can edit.
             </p>
           </div>
+        </div>
+
+        {/* Autonomy: ORA trading itself, the headline capability */}
+        <div className="mb-8">
+          <OraAutopilot />
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">

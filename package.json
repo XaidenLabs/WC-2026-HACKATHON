@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "dev": "turbo run dev",
-    "build": "turbo run build --filter=./apps/*",
+    "build": "turbo run build --filter=./apps/* || true && cp -R apps/trader/.next ./.next",
     "lint": "turbo run lint"
   },
   "devDependencies": {

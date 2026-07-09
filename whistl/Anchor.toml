@@ -6,10 +6,10 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-whistl = "BZ2pNdsvpYmeC3dfLKzpKWKqqqKxPBHMPTYr3qVTMRTz"
+whistl = "9xe1gCVh7kNqjfRbidVUpWBcS2A4EstvkBMkxc34LWRR"
 
 [programs.devnet]
-whistl = "BZ2pNdsvpYmeC3dfLKzpKWKqqqKxPBHMPTYr3qVTMRTz"
+whistl = "9xe1gCVh7kNqjfRbidVUpWBcS2A4EstvkBMkxc34LWRR"
 
 [registry]
 url = "https://api.apr.dev"

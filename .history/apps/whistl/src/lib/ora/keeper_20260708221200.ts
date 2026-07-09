@@ -1,8 +1,10 @@
+
 import { getScoresSnapshot } from "@/lib/txline/server";
 import { parseCurrentScore } from "@/lib/txline/types";
 import type { TxScoreEvent } from "@/lib/txline/types";
 import type { PactTermsArgs } from "@/lib/whistl/program";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 export type KeeperEventKind =
   | "init"
