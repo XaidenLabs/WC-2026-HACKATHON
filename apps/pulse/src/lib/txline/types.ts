@@ -178,7 +178,9 @@ export function parseCurrentScore(events: TxScoreEvent[]) {
   const p1Total = latest.Score?.Participant1?.Total;
   const p2Total = latest.Score?.Participant2?.Total;
   const clockRunning = latest.Clock?.Running ?? false;
-  const isFinished = !clockRunning && (latest.StatusId == null || latest.StatusId >= 10);
+  // StatusId 100 = TxLINE terminal 'match finished'. Codes 1-10 are in-play, incl. half-time,
+  // extra-time and penalty BREAKS (clock stops but the match is NOT over) — never infer finished from a stopped clock.
+  const isFinished = latest.StatusId != null && latest.StatusId >= 100;
   return {
     p1Goals: p1Total?.Goals ?? 0,
     p2Goals: p2Total?.Goals ?? 0,

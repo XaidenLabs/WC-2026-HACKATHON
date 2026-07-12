@@ -66,7 +66,7 @@ export function parseScore(events) {
     c1: p1.Corners ?? 0, c2: p2.Corners ?? 0,
     minutes: Math.floor((latest.Clock?.Seconds ?? 0) / 60),
     clockRunning,
-    isFinished: !clockRunning && (latest.StatusId == null || latest.StatusId >= 10),
+    isFinished: latest.StatusId != null && latest.StatusId >= 100, // 100 = terminal 'finished'; lower incl. HT/ET/pens breaks
   };
 }
 
