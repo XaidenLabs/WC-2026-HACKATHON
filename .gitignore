@@ -2,6 +2,8 @@
 .env
 .env*
 .env.local
+!.env.example
+!**/.env.example
 *.keypair.json
 id.json
 
@@ -45,3 +47,6 @@ DEMO_SCRIPTS*.md
 
 # Telegram bot subscriber lists
 bots/.subs-*.json
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat
