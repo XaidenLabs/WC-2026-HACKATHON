@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import useSWR from "swr";
 import { Brain, Loader2, ChevronRight } from "lucide-react";
@@ -17,6 +17,13 @@ const STAKES = [25, 50, 100, 250];
 export default function MarketsPage() {
   const [ai, setAi] = useState(false);
   const [stake, setStake] = useState(50);
+  const [now, setNow] = useState(0);
+  useEffect(() => {
+    const update = () => setNow(Date.now());
+    update();
+    const timer = setInterval(update, 30_000);
+    return () => clearInterval(timer);
+  }, []);
   const { data, error } = useSWR<{ ok: boolean; fixtures: Fixture[]; error?: string }>(
     "/api/txline/fixtures", fetcher,
     { refreshInterval: 30_000, keepPreviousData: true, errorRetryCount: 10, errorRetryInterval: 3000, revalidateOnFocus: true },
@@ -26,7 +33,6 @@ export default function MarketsPage() {
   const marketsError = (Boolean(error) || (data?.ok === false)) && !hasFixtures;
 
   const groups = useMemo(() => {
-    const now = Date.now();
     const LIVE_MS = 2.5 * 3600e3;
     const all = (data?.fixtures ?? [])
       .map((f) => ({ ...f, phase: (now < f.StartTime ? "upcoming" : now < f.StartTime + LIVE_MS ? "live" : "ended") as Phase }))
@@ -36,7 +42,7 @@ export default function MarketsPage() {
       upcoming: all.filter((f) => f.phase === "upcoming"),
       ended: all.filter((f) => f.phase === "ended").reverse(),
     };
-  }, [data]);
+  }, [data, now]);
 
   return (
     <div className="min-h-screen bg-[#050505] font-mono text-gray-300">

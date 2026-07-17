@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
 import { devnetConnection, oraKeypair, nodeWallet } from "@/lib/whistl/server";
 import { getProgram, buildAcceptPact, pactPda } from "@/lib/whistl/program";
+import { getOddsSnapshot } from "@/lib/txline/server";
+import { parse1X2, parseOU, type TxOddsEntry } from "@/lib/txline/types";
+import { priceQuote, type MarketContext, type PactTerms } from "@/lib/ora/pricer";
 
 // ORA accepts a freshly-created pact: matches the stake on-chain as the counterparty.
 // Only accepts pacts that are genuinely open (status 0 = Created, no counterparty yet).
@@ -23,17 +26,45 @@ export async function POST(req: Request) {
     const pact = (await (program.account as any).pact.fetch(pactPda(pactId))) as {
       status: number;
       stakeAmount: { toNumber: () => number };
+      fixtureId: { toNumber: () => number };
+      threshold: number;
+      comparison: number;
+      statAKey: number;
+      statAPeriod: number;
+      hasStatB: boolean;
+      statBKey: number;
+      statBPeriod: number;
+      op: number | null;
     };
     if (pact.status !== 0) {
       return NextResponse.json({ ok: false, error: "PACT_NOT_OPEN", status: pact.status }, { status: 409 });
     }
 
-    // Compute ORA's fair counter-stake from the odds probability.
+    // Price directly from the immutable on-chain terms + live TxLINE market. The caller is
+    // deliberately not allowed to provide a probability or change ORA's risk sizing.
+    const terms: PactTerms = {
+      threshold: pact.threshold,
+      comparison: pact.comparison,
+      statAKey: pact.statAKey,
+      statAPeriod: pact.statAPeriod,
+      hasStatB: pact.hasStatB,
+      statBKey: pact.statBKey,
+      statBPeriod: pact.statBPeriod,
+      op: pact.op,
+    };
+    let marketCtx: MarketContext = {};
+    try {
+      const odds = (await getOddsSnapshot(pact.fixtureId.toNumber())) as TxOddsEntry[];
+      marketCtx = { x12: parse1X2(odds) ?? undefined, ou: parseOU(odds) ?? undefined };
+    } catch {
+      // priceQuote transparently identifies its model-only fallback in the returned receipt.
+    }
+    const quote = priceQuote(terms, marketCtx);
+
+    // Compute ORA's fair counter-stake from the verified probability.
     // If pTrue = probability creator wins, then ORA stakes: creatorStake * (1-pTrue) / pTrue
     // This makes the bet zero-EV for both sides.
-    const pTrue: number = typeof body?.pact?.baselinePTrue === "number"
-      ? Math.max(0.05, Math.min(0.95, body.pact.baselinePTrue)) // clamp to 5–95%
-      : 0.5;
+    const pTrue = quote.probabilityTrue;
     const creatorStakeRaw = pact.stakeAmount.toNumber();
     const oraStakeRaw = Math.round(creatorStakeRaw * (1 - pTrue) / pTrue);
     const oraStakeBaseUnits = BigInt(Math.max(oraStakeRaw, 1));
@@ -74,6 +105,7 @@ export async function POST(req: Request) {
       sig,
       counterparty: ora.publicKey.toBase58(),
       oraStakeUsdc: Number(oraStakeBaseUnits) / 10 ** USDC_DECIMALS,
+      quote,
     });
   } catch (e) {
     return NextResponse.json({ ok: false, error: (e as Error).message }, { status: 500 });

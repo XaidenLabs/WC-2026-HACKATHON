@@ -365,7 +365,7 @@ function GroupLabel({ icon, title, sub }: { icon: React.ReactNode; title: string
 function BetCreator() {
   const params = useSearchParams();
   const fixtureId = Number(params.get("fixture"));
-  const { ready, authenticated, user, login, getAccessToken } = usePrivy();
+  const { ready, authenticated, login, getAccessToken } = usePrivy();
   const actions = useWhistlActions();
 
   const { data: fixturesData, error: fixturesError, isLoading: fixturesLoading } = useSWR(
@@ -476,6 +476,7 @@ function BetCreator() {
           },
         }),
       }).then((r) => r.json()).catch(() => ({ ok: false }));
+      if (!acc?.ok) throw new Error(acc?.error ?? "ORA could not accept this pact");
 
       // Best-effort DB mirror
       try {
@@ -491,7 +492,7 @@ function BetCreator() {
             statement,
             terms,
             stake_usdc: stake,
-            creator_wallet: user?.wallet?.address ?? null,
+            creator_wallet: actions.wallet?.address ?? null,
           }),
         });
       } catch { /* best-effort */ }

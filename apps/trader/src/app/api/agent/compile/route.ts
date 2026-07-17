@@ -51,52 +51,28 @@ function coerce(obj: Record<string, unknown>): StrategySpec | null {
   };
 }
 
-// Deterministic fallback so the desk works even without ACE.
-function heuristic(text: string): StrategySpec {
-  const t = text.toLowerCase();
-  const selection: Selection = t.includes("away") ? "away" : t.includes("draw") ? "draw" : "home";
-  const side: Side = t.includes(" lay") || t.includes("against") ? "lay" : "back";
-  let trigger: StrategySpec["trigger"] = { type: "always", value: 0, windowMin: 30 };
-  const num = (re: RegExp, d: number) => {
-    const m = t.match(re);
-    return m ? Number(m[1]) : d;
-  };
-  if (t.includes("underdog") || t.includes("value")) trigger = { type: "prob_below", value: num(/(\d+)\s*%/, 35), windowMin: 30 };
-  else if (t.includes("favourite") || t.includes("favorite")) trigger = { type: "prob_above", value: num(/(\d+)\s*%/, 60), windowMin: 30 };
-  else if (t.includes("shorten") || t.includes("money") || t.includes("backed") || t.includes("drop")) trigger = { type: "odds_drop", value: num(/(\d+)\s*%?/, 8), windowMin: 30 };
-  else if (t.includes("drift") || t.includes("lengthen") || t.includes("cool")) trigger = { type: "odds_rise", value: num(/(\d+)\s*%?/, 8), windowMin: 30 };
-  return {
-    name: "Custom strategy",
-    market: "1X2",
-    selection,
-    side,
-    trigger,
-    stake: num(/(\d+)\s*(usdc|units?|\$)/, 100),
-    summary: text.slice(0, 200),
-  };
-}
-
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const text = String(body?.text ?? "").trim();
   if (!text) return NextResponse.json({ ok: false, error: "Describe a strategy first" }, { status: 400 });
 
-  if (aceConfigured()) {
-    try {
-      const reply = await aceChat(
-        [
-          { role: "system", content: SYSTEM },
-          { role: "user", content: text },
-        ],
-        { maxTokens: 300, temperature: 0.2 },
-      );
-      const parsed = extractJson<Record<string, unknown>>(reply);
-      const spec = parsed && coerce(parsed);
-      if (spec) return NextResponse.json({ ok: true, spec, source: "ace" });
-    } catch (e) {
-      console.error("[compile] ACE error:", (e as Error).message);
-    }
+  if (!aceConfigured()) {
+    return NextResponse.json({ ok: false, error: "ORA_BRAIN_UNAVAILABLE" }, { status: 503 });
   }
-
-  return NextResponse.json({ ok: true, spec: heuristic(text), source: "heuristic" });
+  try {
+    const reply = await aceChat(
+      [
+        { role: "system", content: SYSTEM },
+        { role: "user", content: text },
+      ],
+      { maxTokens: 300, temperature: 0.2 },
+    );
+    const parsed = extractJson<Record<string, unknown>>(reply);
+    const spec = parsed && coerce(parsed);
+    if (!spec) return NextResponse.json({ ok: false, error: "ORA returned an invalid strategy" }, { status: 502 });
+    return NextResponse.json({ ok: true, spec, source: "ace" });
+  } catch (e) {
+    console.error("[compile] ACE error:", (e as Error).message);
+    return NextResponse.json({ ok: false, error: "ORA_BRAIN_UNAVAILABLE" }, { status: 502 });
+  }
 }

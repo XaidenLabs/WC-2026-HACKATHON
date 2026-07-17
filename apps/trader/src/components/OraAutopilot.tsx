@@ -47,10 +47,9 @@ export default function OraAutopilot({ onCycle }: { onCycle?: () => void }) {
 
   useEffect(() => {
     if (!armed) { if (timer.current) clearInterval(timer.current); timer.current = null; return; }
-    add("Autopilot armed. ORA is now trading its value model on its own.", "info");
-    runCycle();
+    const initial = setTimeout(() => { void runCycle(); }, 0);
     timer.current = setInterval(runCycle, INTERVAL_MS);
-    return () => { if (timer.current) clearInterval(timer.current); };
+    return () => { clearTimeout(initial); if (timer.current) clearInterval(timer.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [armed]);
 
@@ -73,7 +72,10 @@ export default function OraAutopilot({ onCycle }: { onCycle?: () => void }) {
           runs on a Vercel cron, so ORA trades even when nobody is watching.
         </p>
         <button
-          onClick={() => setArmed((v) => !v)}
+          onClick={() => setArmed((v) => {
+            if (!v) add("Autopilot armed. ORA is now trading its value model on its own.", "info");
+            return !v;
+          })}
           className={cn("mt-3 flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-bold transition-colors",
             armed ? "bg-red-500/15 border border-red-500/40 text-red-400 hover:bg-red-500/25"
               : "bg-emerald-500 text-black hover:bg-emerald-400")}>

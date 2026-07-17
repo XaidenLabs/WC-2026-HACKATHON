@@ -2,9 +2,9 @@ import "server-only";
 import { randomUUID } from "crypto";
 import { supabaseAdmin, supabaseConfigured } from "@/lib/supabase/server";
 
-// Per-user paper-trading wallet. Everyone starts with 1000 paper USDC. Placing a bet locks the
-// stake; when the match settles against the real TxLINE result, a winning bet is paid out
-// (stake × odds). Persisted in Supabase (`trader_bets`), with an in-memory fallback for demos.
+// Per-user live-data simulation wallet. Every position is priced from TxLINE and settled only
+// from a TxLINE final score. Persistence is mandatory: an in-memory fallback would create
+// receipts that disappear and must never be presented as a trading record.
 
 export const STARTING_BALANCE = 1000;
 
@@ -37,37 +37,30 @@ export function evaluateBet(bet: Pick<Bet, "market" | "line" | "selection">, p1G
   return result === bet.selection ? "won" : "lost";
 }
 
-let backend: "supabase" | "memory" | null = null;
-async function resolveBackend(): Promise<"supabase" | "memory"> {
-  if (backend) return backend;
-  if (!supabaseConfigured()) return (backend = "memory");
+let backendReady: boolean | null = null;
+async function requireBackend(): Promise<void> {
+  if (backendReady) return;
+  if (!supabaseConfigured()) throw new Error("TRADING_STORE_UNAVAILABLE");
   const { error } = await supabaseAdmin().from("trader_bets").select("id").limit(1);
-  backend = error ? "memory" : "supabase";
-  if (error) console.warn("[trader] trader_bets table missing · using in-memory store. Run supabase/trader.sql to persist.");
-  return backend;
+  if (error) throw new Error("TRADING_STORE_UNAVAILABLE");
+  backendReady = true;
 }
 
-const mem: Bet[] = [];
-
 export async function getUserBets(userDid: string): Promise<Bet[]> {
-  if ((await resolveBackend()) === "supabase") {
-    const { data } = await supabaseAdmin()
-      .from("trader_bets")
-      .select("*")
-      .eq("user_did", userDid)
-      .order("created_at", { ascending: false });
-    return (data as Bet[]) ?? [];
-  }
-  return mem.filter((b) => b.user_did === userDid).sort((a, b) => b.created_at.localeCompare(a.created_at));
+  await requireBackend();
+  const { data } = await supabaseAdmin()
+    .from("trader_bets")
+    .select("*")
+    .eq("user_did", userDid)
+    .order("created_at", { ascending: false });
+  return (data as Bet[]) ?? [];
 }
 
 /** Fetch a single bet by id (any user) — powers the public, shareable prediction page. */
 export async function getBet(id: string): Promise<Bet | null> {
-  if ((await resolveBackend()) === "supabase") {
-    const { data } = await supabaseAdmin().from("trader_bets").select("*").eq("id", id).maybeSingle();
-    return (data as Bet) ?? null;
-  }
-  return mem.find((b) => b.id === id) ?? null;
+  await requireBackend();
+  const { data } = await supabaseAdmin().from("trader_bets").select("*").eq("id", id).maybeSingle();
+  return (data as Bet) ?? null;
 }
 
 /** Balance = 1000 − every stake placed + every winning payout (stake × odds). */
@@ -110,11 +103,11 @@ export async function placeBet(
     created_at: new Date().toISOString(),
   };
 
-  if ((await resolveBackend()) === "supabase") {
-    const { error } = await supabaseAdmin().from("trader_bets").insert({
+  await requireBackend();
+  const { error } = await supabaseAdmin().from("trader_bets").insert({
       id: bet.id, user_did: userDid, fixture_id: fixtureId, match, market, line, selection, odds: bet.odds, stake: bet.stake, status: "open",
     });
-    if (error) {
+  if (error) {
       // Migration not applied yet (no market/line columns). 1X2 still works without them;
       // goals bets require the migration.
       const missingCols = /column .*(market|line)/i.test(error.message);
@@ -128,18 +121,11 @@ export async function placeBet(
       } else {
         return { ok: false, error: error.message };
       }
-    }
-  } else {
-    mem.push(bet);
   }
   return { ok: true, bet };
 }
 
 export async function markSettled(betId: string, status: "won" | "lost", pnl: number): Promise<void> {
-  if ((await resolveBackend()) === "supabase") {
-    await supabaseAdmin().from("trader_bets").update({ status, pnl }).eq("id", betId);
-  } else {
-    const b = mem.find((x) => x.id === betId);
-    if (b) { b.status = status; b.pnl = pnl; }
-  }
+  await requireBackend();
+  await supabaseAdmin().from("trader_bets").update({ status, pnl }).eq("id", betId);
 }

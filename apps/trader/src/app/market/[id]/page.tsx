@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import useSWR from "swr";
@@ -53,12 +53,7 @@ export default function MarketPage() {
   const { back, pendingId, authenticated } = useBackBet();
   const pick = oraPick(odds ?? null);
   const pickTeam = pick ? (pick.selection === "home" ? p1 : pick.selection === "away" ? p2 : "the Draw") : null;
-  // TxLINE only includes the O/U market in some snapshots — retain the last good one so the
-  // goals card doesn't flicker out on the intermittent responses.
-  const lastGoals = useRef<ReturnType<typeof oraGoalsPick>>(null);
-  const freshGoals = oraGoalsPick(oddsData?.ou ?? null);
-  if (freshGoals) lastGoals.current = freshGoals;
-  const goalsPick = freshGoals ?? lastGoals.current;
+  const goalsPick = oraGoalsPick(oddsData?.ou ?? null);
   const backing = pendingId === fixtureId;
 
   const legs: { sel: Sel; label: string }[] = [

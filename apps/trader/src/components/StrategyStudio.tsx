@@ -41,14 +41,6 @@ export default function StrategyStudio({
   const addLog = (msg: string, type: LogType = "info") =>
     setLogs((p) => [...p, { time: new Date().toLocaleTimeString(), msg, type }]);
   useEffect(() => {
-    setLogs([
-      { time: new Date().toLocaleTimeString(), msg: "TxAgent runtime online.", type: "info" },
-      { time: new Date().toLocaleTimeString(), msg: `TxLINE feed connected · ${scoped ? "this match" : "World Cup 2026"}.`, type: "success" },
-      { time: new Date().toLocaleTimeString(), msg: "Describe a strategy in plain English to begin.", type: "info" },
-    ]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  useEffect(() => {
     const el = termRef.current;
     if (el && stick.current) el.scrollTop = el.scrollHeight;
   }, [logs]);

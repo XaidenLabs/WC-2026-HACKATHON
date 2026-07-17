@@ -22,10 +22,14 @@ export function botConfigured() { return Boolean(process.env.TELEGRAM_BOT_TOKEN)
 export async function tg(method: string, body: Record<string, unknown>) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) return { ok: false, description: "no token" };
-  const r = await fetch(`${API}/bot${token}/${method}`, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
-  });
-  return r.json() as Promise<{ ok: boolean; error_code?: number; description?: string; result?: unknown }>;
+  try {
+    const r = await fetch(`${API}/bot${token}/${method}`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), cache: "no-store",
+    });
+    return await r.json() as { ok: boolean; error_code?: number; description?: string; result?: unknown };
+  } catch (e) {
+    return { ok: false, description: `Telegram network error: ${(e as Error).message}` };
+  }
 }
 export async function sendTo(chatId: number | string, text: string) {
   const res = await tg("sendMessage", { chat_id: chatId, text, parse_mode: "HTML", disable_web_page_preview: true });
@@ -34,7 +38,8 @@ export async function sendTo(chatId: number | string, text: string) {
 
 // ── subscribers ──────────────────────────────────────────────────────────────
 export async function addSub(chatId: number) {
-  await supabaseAdmin().from("telegram_subs").upsert({ bot: botName(), chat_id: chatId });
+  const { error } = await supabaseAdmin().from("telegram_subs").upsert({ bot: botName(), chat_id: chatId });
+  if (error) throw new Error(`telegram_subs upsert failed: ${error.message}`);
 }
 export async function removeSub(chatId: number) {
   await supabaseAdmin().from("telegram_subs").delete().eq("bot", botName()).eq("chat_id", chatId);
@@ -55,9 +60,10 @@ async function getStates(): Promise<Map<number, MatchState>> {
   return m;
 }
 async function saveState(fixtureId: number, s: MatchState) {
-  await supabaseAdmin().from("telegram_match_state").upsert({
+  const { error } = await supabaseAdmin().from("telegram_match_state").upsert({
     bot: botName(), fixture_id: fixtureId, ...s, updated_at: new Date().toISOString(),
   });
+  if (error) throw new Error(`telegram_match_state upsert failed: ${error.message}`);
 }
 
 export function welcomeText() {
@@ -82,10 +88,12 @@ export async function runTick() {
   const live = fixtures.filter((f) => f.StartTime <= now && now < f.StartTime + 3.5 * 3600e3).slice(0, 15);
 
   const states = await getStates();
+  let deliveryErrors = 0;
   const broadcast = async (text: string) => {
     for (const chatId of targets) {
       const r = await sendTo(chatId, text);
       if (r === "blocked" && typeof chatId === "number") { await removeSub(chatId); subs = subs.filter((s) => s !== chatId); }
+      else if (r !== "ok") { deliveryErrors++; console.error(`[telegram] delivery to ${chatId} failed: ${r}`); }
     }
   };
 
@@ -117,5 +125,5 @@ export async function runTick() {
       await saveState(f.FixtureId, cur);
     }
   }
-  return { ok: true, bot: botName(), subscribers: subs.length, live: live.length, checked, changes };
+  return { ok: true, bot: botName(), subscribers: subs.length, live: live.length, checked, changes, deliveryErrors };
 }

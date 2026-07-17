@@ -7,9 +7,8 @@ import { inscribe, explorerUrl } from "@/lib/agent/onchain";
 
 // POST /api/agent/deploy  { spec }
 // Evaluates the strategy against LIVE + UPCOMING markets and takes the agent's best positions
-// right now — ranking every market by how well it fits the strategy, then inscribing the top
-// few on Solana. Always produces calls when markets are open (strict trigger hits rank first,
-// otherwise the closest-fitting markets), so deploying always does something.
+// right now. It only inscribes calls that meet the compiled rule — a near match is never
+// represented as a signal.
 
 const MAX_SCAN = 12;
 const MAX_INSCRIBE = 3;
@@ -18,22 +17,6 @@ function selLeg(x: ReturnType<typeof parse1X2>, sel: Selection) {
   if (!x) return null;
   const leg = sel === "home" ? x.home : sel === "away" ? x.away : x.draw;
   return leg.pct != null && leg.dec ? { prob: leg.pct, dec: leg.dec } : null;
-}
-
-// How well a market fits the strategy's intent (higher = better pick).
-function fitScore(spec: StrategySpec, m: MatchInput): number {
-  switch (spec.trigger.type) {
-    case "prob_above":
-      return m.entryProb; // favourite → higher implied % is a better fit
-    case "prob_below":
-      return 100 - m.entryProb; // underdog → lower implied % is a better fit
-    case "odds_drop":
-      return m.probChange ?? -999; // money coming in → biggest positive move
-    case "odds_rise":
-      return -(m.probChange ?? 999); // drifting → biggest negative move
-    default:
-      return m.entryProb;
-  }
 }
 
 export async function POST(req: Request) {
@@ -59,7 +42,7 @@ export async function POST(req: Request) {
       .slice(0, MAX_SCAN);
 
     // Evaluate every market we can price.
-    const evaluated: { f: TxFixture; input: MatchInput; triggered: boolean; fit: number }[] = [];
+    const evaluated: { f: TxFixture; input: MatchInput; triggered: boolean }[] = [];
     await Promise.all(
       candidates.map(async (f) => {
         try {
@@ -78,26 +61,20 @@ export async function POST(req: Request) {
             probChange,
             result: null,
           };
-          evaluated.push({ f, input, triggered: triggerFires(spec, input), fit: fitScore(spec, input) });
+          evaluated.push({ f, input, triggered: triggerFires(spec, input) });
         } catch {
           /* skip market on odds error */
         }
       }),
     );
 
-    // Strict signals rank first; otherwise the best-fitting markets. Always take the top few.
-    evaluated.sort((a, b) => Number(b.triggered) - Number(a.triggered) || b.fit - a.fit);
-    const strictCount = evaluated.filter((e) => e.triggered).length;
-    const picks = evaluated.slice(0, MAX_INSCRIBE);
+    const picks = evaluated.filter((e) => e.triggered).slice(0, MAX_INSCRIBE);
 
     const calls: (AgentCall & {
       fixtureId: number; entryProb: number; triggered: boolean; signature: string; explorerUrl: string;
     })[] = [];
-    const SEL_LABEL: Record<Selection, string> = { home: "Home", draw: "the Draw", away: "Away" };
     for (const { f, input, triggered } of picks) {
-      const reasoning = triggered
-        ? reasoningFor(spec, input)
-        : `Best available fit for "${spec.name}" · ${SEL_LABEL[spec.selection]} at ${Math.round(input.entryProb)}% (no market met the strict rule).`;
+      const reasoning = reasoningFor(spec, input);
       const call: AgentCall = {
         strategy: spec.name,
         match: input.match,
@@ -122,9 +99,9 @@ export async function POST(req: Request) {
       ok: true,
       scanned: candidates.length,
       priced: evaluated.length,
-      fired: strictCount, // strict signals
+      fired: picks.length,
       inscribed: calls.length,
-      bestFit: strictCount === 0 && calls.length > 0, // took closest-fit picks
+      bestFit: false,
       calls,
     });
   } catch (e) {

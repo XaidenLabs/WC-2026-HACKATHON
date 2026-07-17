@@ -49,7 +49,7 @@ function PositionsModal({ onClose }: { onClose: () => void }) {
       <div className="w-full max-w-md rounded-xl border border-white/10 bg-[#0a0a0a] p-5" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-gray-500">My paper wallet</p>
+            <p className="text-[10px] uppercase tracking-wider text-gray-500">Live-data sandbox</p>
             <p className="text-2xl font-bold text-white">
               {wallet ? wallet.balance.toFixed(2) : "…"} <span className="text-xs font-normal text-gray-500">USDC</span>
             </p>
@@ -63,7 +63,7 @@ function PositionsModal({ onClose }: { onClose: () => void }) {
 
         <div className="max-h-80 space-y-2 overflow-y-auto">
           {positions.length === 0 && (
-            <p className="py-8 text-center text-xs text-gray-600">No trades yet · tap any market to place your first.</p>
+            <p className="py-8 text-center text-xs text-gray-600">No positions yet · every quote and result comes from TxLINE.</p>
           )}
           {positions.map((p) => <PositionRow key={p.id} p={p} />)}
         </div>

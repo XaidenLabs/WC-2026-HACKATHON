@@ -9,14 +9,22 @@ export async function GET(req: Request) {
   if (secret && url.searchParams.get("secret") !== secret) {
     return NextResponse.json({ ok: false, error: "UNAUTHORIZED (pass ?secret=CRON_SECRET)" }, { status: 401 });
   }
+  if (!process.env.TELEGRAM_BOT_TOKEN) {
+    return NextResponse.json({ ok: false, error: "TELEGRAM_BOT_TOKEN_NOT_CONFIGURED" }, { status: 503 });
+  }
   const base = process.env.NEXT_PUBLIC_BASE_URL || `${url.protocol}//${url.host}`;
   const webhook = `${base}/api/telegram/webhook`;
-  const set = await tg("setWebhook", { url: webhook, allowed_updates: ["message"] });
-  await tg("setMyCommands", {
+  const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
+  const set = await tg("setWebhook", {
+    url: webhook,
+    allowed_updates: ["message"],
+    ...(webhookSecret ? { secret_token: webhookSecret } : {}),
+  });
+  const commands = await tg("setMyCommands", {
     commands: [
       { command: "start", description: "Get live goals, corners and scorelines" },
       { command: "stop", description: "Stop live updates" },
     ],
   });
-  return NextResponse.json({ ok: set.ok, webhook, telegram: set });
+  return NextResponse.json({ ok: set.ok && commands.ok, webhook, telegram: set, commands });
 }

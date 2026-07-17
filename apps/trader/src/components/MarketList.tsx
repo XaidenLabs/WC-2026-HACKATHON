@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import useSWR from "swr";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cn, fetcher, kickoff } from "@/lib/ui";
 
 type Fixture = { FixtureId: number; Participant1: string; Participant2: string; StartTime: number; Competition: string };
@@ -10,13 +10,19 @@ type Phase = "upcoming" | "live" | "finished";
 
 /** Live TxLINE market list — reused on the landing page and the ORA hub. Tap → per-match desk. */
 export default function MarketList({ limit = 12, className }: { limit?: number; className?: string }) {
+  const [now, setNow] = useState(0);
+  useEffect(() => {
+    const update = () => setNow(Date.now());
+    update();
+    const timer = setInterval(update, 30_000);
+    return () => clearInterval(timer);
+  }, []);
   const { data, error } = useSWR<{ ok: boolean; fixtures: Fixture[]; error?: string }>(
     "/api/txline/fixtures", fetcher, { refreshInterval: 60_000 },
   );
   const marketsError = Boolean(error) || (data && data.ok === false);
 
   const markets = useMemo(() => {
-    const now = Date.now();
     const LIVE_MS = 2.5 * 3600e3;
     return (data?.fixtures ?? [])
       .map((f) => ({
@@ -26,7 +32,7 @@ export default function MarketList({ limit = 12, className }: { limit?: number; 
       .filter((f) => f.phase !== "finished")
       .sort((a, b) => Number(b.phase === "live") - Number(a.phase === "live") || a.StartTime - b.StartTime)
       .slice(0, limit);
-  }, [data, limit]);
+  }, [data, limit, now]);
 
   return (
     <div className={cn("space-y-1.5", className)}>

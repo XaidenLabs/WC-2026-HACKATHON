@@ -8,7 +8,7 @@ import { useTraderWallet, type Position } from "@/hooks/useTraderWallet";
 
 const SEL: Record<string, string> = { home: "Home", draw: "Draw", away: "Away" };
 
-// My predictions — every paper bet the signed-in user has placed, each linking to its own
+// My predictions — every live-data sandbox position the signed-in user has placed, each linking to its own
 // shareable prediction page.
 export default function Portfolio() {
   const { ready, authenticated, login, wallet, email } = useTraderWallet();
@@ -25,7 +25,7 @@ export default function Portfolio() {
         {ready && !authenticated ? (
           <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-8 text-center">
             <Wallet className="mx-auto size-6 text-emerald-400" />
-            <p className="mt-3 text-sm text-gray-400">Sign in to see your predictions and 1,000 free paper USDC.</p>
+            <p className="mt-3 text-sm text-gray-400">Sign in to see your live-data sandbox positions and 1,000 test USDC.</p>
             <button onClick={login} className="mt-4 rounded-md bg-emerald-500 px-4 py-2 text-xs font-bold text-black hover:bg-emerald-400">
               Sign in with email
             </button>
@@ -34,7 +34,7 @@ export default function Portfolio() {
           <>
             {/* Wallet summary */}
             <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.03] p-5">
-              <p className="text-[10px] uppercase tracking-wider text-gray-500">My paper wallet</p>
+              <p className="text-[10px] uppercase tracking-wider text-gray-500">Live-data sandbox</p>
               <p className="mt-0.5 font-mono text-3xl font-bold tabular-nums text-white">
                 {wallet ? wallet.balance.toFixed(2) : "…"} <span className="text-sm font-normal text-gray-500">USDC</span>
               </p>
