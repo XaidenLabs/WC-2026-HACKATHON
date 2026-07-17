@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚽ WHISTL
+# ⚽ WC-2026-HACKATHON
 
 ### The World Cup, settled by math, not by a middleman.
 
@@ -35,7 +35,7 @@ Every prediction market has the same rotten center: **someone has to say who won
 An admin key. A multisig. A "trust us." That someone is the attack surface, the censorship
 point, and the reason regulators flinch.
 
-WHISTL removes that someone. TxODDS publishes match results as **Merkle roots on Solana** and
+WC-2026-HACKATHON removes that someone. TxODDS publishes match results as **Merkle roots on Solana** and
 ships a public verifier instruction, `validate_stat`, that returns a plain `bool` for any
 staked claim. We built a settlement engine that **calls that verifier over CPI from inside the
 payout transaction**, and only releases escrow based on what the verifier returns,
@@ -54,7 +54,7 @@ Each app is a standalone Next.js project with its **own detailed README**. Click
 | | App | What it is | Who it's for | Port |
 |---|---|---|---|---|
 | 🟢 | **[apps/whistl](apps/whistl)** | The **protocol**: create pacts, ORA takes the other side, one-click settle with a proof receipt | Everyone. The reference product. | `3000` |
-| 🔵 | **[apps/pulse](apps/pulse)** | **WHISTL Pulse**, the *consumer* PWA. Live AI commentary, push alerts, Hi-Lo, sweepstakes, Agent Mind | Fans who never touch a DEX | `3001` |
+| 🔵 | **[apps/pulse](apps/pulse)** | **WC-2026-HACKATHON Pulse**, the *consumer* PWA. Live AI commentary, push alerts, Hi-Lo, sweepstakes, Agent Mind | Fans who never touch a DEX | `3001` |
 | 🟠 | **[apps/trader](apps/trader)** | **TxAgent Desk**, a trading terminal: back ORA's picks, or write a strategy in plain English, backtest it, deploy an agent | Degens & quants | `3000` |
 
 They are **not three codebases**. Everything marked shared below is *identical* across all
@@ -75,7 +75,7 @@ whistl-workspace/  (Turborepo + npm workspaces)
 │
 ├── whistl/programs/whistl/   ⚙️  Anchor settlement engine (Rust): the scored core
 │
-├── bots/         🤖  Live Telegram bots (WHISTL · PULSE · TxAgent) broadcasting scores
+├── bots/         🤖  Live Telegram bots (WC-2026-HACKATHON · PULSE · TxAgent) broadcasting scores
 │
 └── derisk/       🔬  Runnable proof spikes (Node): the entire money path, de-risked
 ```
@@ -100,7 +100,7 @@ deployed bytecode. **[Read the full settlement walkthrough →](apps/whistl#-how
 
 ## 🤖 ORA, the verifiable AI counterparty
 
-P2P markets die of loneliness: nobody to take the other side. WHISTL doesn't have that problem,
+P2P markets die of loneliness: nobody to take the other side. WC-2026-HACKATHON doesn't have that problem,
 because the house is an agent named **ORA**, and ORA is made of glass.
 
 - **Always-on liquidity.** ORA prices a fair line from live TxODDS odds (reasoning via
@@ -250,7 +250,7 @@ for three different humans.
 
 <div align="center">
 
-**WHISTL** · *the whistle blows, the chain decides.*
+**WC-2026-HACKATHON** · *the whistle blows, the chain decides.*
 
 Built for the World Cup Hackathon 2026 · Superteam Earn × TxODDS
 Data by [TxODDS](https://txline-docs.txodds.com) · Agent memory by [OOBE](https://github.com/OOBE-PROTOCOL) · Reasoning by [AceData Cloud](https://platform.acedata.cloud)
