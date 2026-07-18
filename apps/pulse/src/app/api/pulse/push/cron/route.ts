@@ -38,29 +38,34 @@ export async function GET() {
       const score = parseCurrentScore(events);
       if (!score) continue;
 
-      const prev = goalCache[f.FixtureId] || { p1: 0, p2: 0, finishedSummarySent: false };
+      const prev = goalCache[f.FixtureId] || { p1: 0, p2: 0, finishedSummarySent: false, kickoffSent: false };
       
       let sendPush = false;
       let body = "";
       let title = "Live Match Alert";
 
+      // 0. Kickoff Check
+      if (!prev.kickoffSent && Math.abs(Date.now() - f.StartTime) < 15 * 60000) {
+        sendPush = true;
+        title = "Match Started";
+        body = `KICKOFF: ${f.Participant1} vs ${f.Participant2} has begun!`;
+      }
+
       // 1. Goal Checks
-      if (score.p1Goals > prev.p1) {
-        sendPush = true;
-        body = `GOAL! ${f.Participant1} scores! (${score.p1Goals} - ${score.p2Goals})`;
-      } else if (score.p2Goals > prev.p2) {
-        sendPush = true;
-        body = `GOAL! ${f.Participant2} scores! (${score.p1Goals} - ${score.p2Goals})`;
+      if (!sendPush) {
+        if (score.p1Goals > prev.p1) {
+          sendPush = true;
+          body = `GOAL! ${f.Participant1} scores! (${score.p1Goals} - ${score.p2Goals})`;
+        } else if (score.p2Goals > prev.p2) {
+          sendPush = true;
+          body = `GOAL! ${f.Participant2} scores! (${score.p1Goals} - ${score.p2Goals})`;
+        }
       }
 
       // 2. Full Time Summary Check
       if (score.isFinished && !prev.finishedSummarySent && !sendPush) {
         sendPush = true;
         title = "Full Time Summary";
-        body = `FT: ${f.Participant1} ${score.p1Goals} - ${score.p2Goals} ${f.Participant2}\n` +
-               `🟨 ${score.p1Yellow}-${score.p2Yellow} | 🟥 ${score.p1Yellow}-${score.p2Yellow} | ⛳ ${score.p1Corners}-${score.p2Corners}`;
-        // Note: the red cards variable isn't parsed in parseCurrentScore yet, but we have yellow and corners.
-        // Let's adjust string for what we have:
         body = `FT: ${f.Participant1} ${score.p1Goals} - ${score.p2Goals} ${f.Participant2}\n` +
                `Yellows: ${score.p1Yellow}-${score.p2Yellow} | Corners: ${score.p1Corners}-${score.p2Corners}`;
       }
@@ -89,7 +94,8 @@ export async function GET() {
       goalCache[f.FixtureId] = { 
         p1: score.p1Goals, 
         p2: score.p2Goals, 
-        finishedSummarySent: prev.finishedSummarySent || (score.isFinished && sendPush)
+        finishedSummarySent: prev.finishedSummarySent || (score.isFinished && sendPush),
+        kickoffSent: prev.kickoffSent || (Math.abs(Date.now() - f.StartTime) < 15 * 60000 && sendPush)
       };
     }
 

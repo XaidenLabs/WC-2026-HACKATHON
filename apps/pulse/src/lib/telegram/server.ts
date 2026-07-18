@@ -100,7 +100,13 @@ export async function runTick() {
     const prev = states.get(f.FixtureId);
     const cur: MatchState = { g1: s.p1Goals, g2: s.p2Goals, c1: s.p1Corners, c2: s.p2Corners, finished: s.isFinished };
 
-    if (!prev) { await saveState(f.FixtureId, cur); continue; } // first sight: record silently
+    if (!prev) { 
+      await saveState(f.FixtureId, cur); 
+      if (targets.length > 0 && Math.abs(now - f.StartTime) < 15 * 60000) {
+        await broadcast(`⏱️ <b>KICKOFF</b>\nThe match has begun!\n<b>${scoreline}</b>${footer}`); changes++;
+      }
+      continue; 
+    }
 
     if (targets.length > 0) {
       if (cur.g1 > prev.g1 || cur.g2 > prev.g2) {
