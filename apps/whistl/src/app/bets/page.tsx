@@ -254,7 +254,7 @@ function ProofReceipt({ pact, userDid }: { pact: PactRow; userDid: string }) {
 function SettleButton({ pact, onSettled }: { pact: PactRow; onSettled: () => void }) {
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
-  const [result, setResult] = useState<{ demo: boolean; explorerUrl?: string; isTrue?: boolean } | null>(null);
+  const [result, setResult] = useState<{ explorerUrl?: string; isTrue?: boolean } | null>(null);
 
   async function handleSettle() {
     setState("loading");
@@ -272,7 +272,7 @@ function SettleButton({ pact, onSettled }: { pact: PactRow; onSettled: () => voi
       });
       const j = await res.json();
       if (j.ok) {
-        setResult({ demo: !!j.demo, explorerUrl: j.explorerUrl, isTrue: j.isTrue });
+        setResult({ explorerUrl: j.explorerUrl, isTrue: j.isTrue });
         setState("done");
         setTimeout(onSettled, 2000);
       } else {
@@ -294,11 +294,7 @@ function SettleButton({ pact, onSettled }: { pact: PactRow; onSettled: () => voi
           <ShieldCheck className="size-3.5 shrink-0" aria-hidden />
           {won ? "WON · predicate TRUE ✓" : lost ? "LOST · predicate FALSE ✗" : "Settled"}
         </div>
-        {result.demo ? (
-          <p className="font-mono text-[10px] text-text-dim">
-            verified via TxLINE Merkle proof · result recorded
-          </p>
-        ) : result.explorerUrl ? (
+        {result.explorerUrl ? (
           <a
             href={result.explorerUrl}
             target="_blank"
