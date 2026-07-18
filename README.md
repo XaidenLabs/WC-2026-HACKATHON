@@ -10,8 +10,8 @@ Trustless P2P prop-bet escrow + settlement on Solana, powered by
 
 <br/>
 
-[![Solana](https://img.shields.io/badge/Solana-Devnet-14F195?style=for-the-badge&logo=solana&logoColor=black)](https://explorer.solana.com/address/BZ2pNdsvpYmeC3dfLKzpKWKqqqKxPBHMPTYr3qVTMRTz?cluster=devnet)
-[![Anchor](https://img.shields.io/badge/Anchor-Program_Live-512BD4?style=for-the-badge)](https://explorer.solana.com/address/BZ2pNdsvpYmeC3dfLKzpKWKqqqKxPBHMPTYr3qVTMRTz?cluster=devnet)
+[![Solana](https://img.shields.io/badge/Solana-Devnet-14F195?style=for-the-badge&logo=solana&logoColor=black)](https://explorer.solana.com/address/9xe1gCVh7kNqjfRbidVUpWBcS2A4EstvkBMkxc34LWRR?cluster=devnet)
+[![Anchor](https://img.shields.io/badge/Anchor-Program_Live-512BD4?style=for-the-badge)](https://explorer.solana.com/address/9xe1gCVh7kNqjfRbidVUpWBcS2A4EstvkBMkxc34LWRR?cluster=devnet)
 [![Next.js](https://img.shields.io/badge/Next.js_16-000000?style=for-the-badge&logo=nextdotjs)](https://nextjs.org)
 [![Track](https://img.shields.io/badge/Track-Prediction_Markets_%26_Settlement-FF5F1F?style=for-the-badge)](#-the-brief-and-why-we-win-it)
 
@@ -88,7 +88,7 @@ Judges: don't take our word for anything. Click these.
 
 | Thing | Value | Proof |
 |---|---|---|
-| **WHISTL settlement program** | `BZ2pNdsvpYmeC3dfLKzpKWKqqqKxPBHMPTYr3qVTMRTz` | [🔗 Explorer (devnet, executable)](https://explorer.solana.com/address/BZ2pNdsvpYmeC3dfLKzpKWKqqqKxPBHMPTYr3qVTMRTz?cluster=devnet) |
+| **WHISTL settlement program** | `9xe1gCVh7kNqjfRbidVUpWBcS2A4EstvkBMkxc34LWRR` | [🔗 Explorer (devnet, executable)](https://explorer.solana.com/address/9xe1gCVh7kNqjfRbidVUpWBcS2A4EstvkBMkxc34LWRR?cluster=devnet) |
 | **TxODDS `validate_stat` (what we CPI into)** | `6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J` | [🔗 Explorer (devnet)](https://explorer.solana.com/address/6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J?cluster=devnet) |
 | **Settlement source (the CPI + proof-provenance check)** | `settle_pact` | [whistl/programs/whistl/src/lib.rs](whistl/programs/whistl/src/lib.rs) |
 | **Live TxLINE data proof (real finished match → `true`)** | de-risk spike | [derisk/04-validate-onchain.mjs](derisk/04-validate-onchain.mjs) |
@@ -123,7 +123,7 @@ Settlement**, **Trading Tools & Agents**, and **Fan Engagement**, one per app.
 | **Settlement** | **Solana** + **Anchor**: custom escrow engine CPI-ing TxODDS `validate_stat` |
 | **AI reasoning** | **AceData Cloud** (`gpt-4o-mini`): ORA's pricing & the NL strategy compiler |
 | **Agent memory** | **OOBE Synapse**: on-chain reasoning / "glass skull" |
-| **Auth & wallets** | **Privy**: email/social login → embedded Solana wallet, per-user paper bankroll |
+| **Auth & wallets** | **Privy**: email/social login → embedded Solana wallet and devnet test-USDC |
 | **Persistence** | **Supabase**: pacts, commentary, sweepstakes, push subscriptions |
 | **Frontend** | **Next.js 16** · React 19 · Tailwind v4 · App Router · PWA + Web Push |
 | **Monorepo** | **Turborepo** + npm workspaces |
@@ -179,7 +179,7 @@ secrets.
 | `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase client | public · shared |
 | `NEXT_PUBLIC_ORA_PUBKEY` | ORA wallet address | public · shared |
 | `NEXT_PUBLIC_SOLANA_RPC` | Devnet RPC (Helius recommended) | public · shared |
-| `NEXT_PUBLIC_WHISTL_PROGRAM_ID` | `BZ2pNdsvpYmeC3dfLKzpKWKqqqKxPBHMPTYr3qVTMRTz` | public · shared |
+| `NEXT_PUBLIC_WHISTL_PROGRAM_ID` | `9xe1gCVh7kNqjfRbidVUpWBcS2A4EstvkBMkxc34LWRR` | public · shared |
 | `NEXT_PUBLIC_TXLINE_PROGRAM_ID` | `6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J` | public · shared |
 | `NEXT_PUBLIC_TEST_USDC_MINT` | Devnet test-USDC mint (6 dec) | public · shared |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `NEXT_PRIVATE_VAPID_PRIVATE_KEY` | Web Push (Pulse alerts) via `npx web-push generate-vapid-keys` | Pulse only |

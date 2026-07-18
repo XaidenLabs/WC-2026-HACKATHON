@@ -11,7 +11,7 @@ glass-box view into ORA's mind, all powered by real-time TxLINE match data.
 
 [![Next.js](https://img.shields.io/badge/Next.js_16-000000?style=for-the-badge&logo=nextdotjs)](https://nextjs.org)
 [![PWA](https://img.shields.io/badge/PWA-Web_Push-C6F24E?style=for-the-badge)](https://developer.mozilla.org/docs/Web/Progressive_web_apps)
-[![Solana](https://img.shields.io/badge/Solana-Devnet-14F195?style=for-the-badge&logo=solana&logoColor=black)](https://explorer.solana.com/address/BZ2pNdsvpYmeC3dfLKzpKWKqqqKxPBHMPTYr3qVTMRTz?cluster=devnet)
+[![Solana](https://img.shields.io/badge/Solana-Devnet-14F195?style=for-the-badge&logo=solana&logoColor=black)](https://explorer.solana.com/address/9xe1gCVh7kNqjfRbidVUpWBcS2A4EstvkBMkxc34LWRR?cluster=devnet)
 
 **Runs on** `http://localhost:3001`
 

@@ -7,7 +7,7 @@ import { useTraderWallet } from "@/hooks/useTraderWallet";
 type Sel = "home" | "draw" | "away" | "over" | "under";
 
 /**
- * One-tap "back this pick": gates on sign-in, places the paper bet, then routes to the
+ * One-tap "back this pick": gates on sign-in, creates a TxLINE-priced position, then routes to the
  * bet's own prediction receipt. Powers the home feed and the match desk's ORA-pick button.
  */
 export function useBackBet() {

@@ -47,7 +47,7 @@ export default function MobileMenu() {
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-line">
           <span className="font-mono text-sm font-semibold tracking-[0.2em] text-text">
-            WHISTL<span className="text-signal" aria-hidden>●</span>
+            PULSE<span className="text-signal" aria-hidden>●</span>
           </span>
           <button
             type="button"
@@ -61,45 +61,45 @@ export default function MobileMenu() {
 
         <nav className="flex flex-1 flex-col gap-1 px-3 py-4">
           <Link
-            href="#how"
+            href="/"
             onClick={() => setOpen(false)}
             className="rounded-lg px-4 py-3 text-base font-medium text-text-dim transition-colors hover:bg-ink-3 hover:text-text"
           >
-            How it works
+            Live feed
           </Link>
           <Link
-            href="/matches"
+            href="/alerts"
             onClick={() => setOpen(false)}
             className="rounded-lg px-4 py-3 text-base font-medium text-text-dim transition-colors hover:bg-ink-3 hover:text-text"
           >
-            Markets
+            Alerts
           </Link>
           <Link
-            href="/wallet"
+            href="/hilo"
             onClick={() => setOpen(false)}
             className="rounded-lg px-4 py-3 text-base font-medium text-text-dim transition-colors hover:bg-ink-3 hover:text-text"
           >
-            Wallet
+            Hi-Lo
           </Link>
           <Link
-            href="/bets"
+            href="/sweepstake"
             onClick={() => setOpen(false)}
             className="rounded-lg px-4 py-3 text-base font-medium text-text-dim transition-colors hover:bg-ink-3 hover:text-text"
           >
-            My Bets
+            Friends
           </Link>
           <Link
-            href="/ora"
+            href="/mind"
             onClick={() => setOpen(false)}
             className="rounded-lg px-4 py-3 text-base font-medium text-signal transition-colors hover:bg-ink-3 hover:text-text"
           >
-            ORA Sentinel
+            ORA Mind
           </Link>
         </nav>
 
         <div className="border-t border-line px-5 py-4">
           <p className="font-mono text-[10px] text-text-dim uppercase tracking-wider">
-            World Cup 2026 · Trustless Settlement
+            World Cup 2026 · Live fan intelligence
           </p>
         </div>
       </div>

@@ -27,7 +27,7 @@ export type WalletData = {
   positions: Position[];
 };
 
-/** Privy auth + the signed-in user's paper wallet (auto-settles + refreshes every 30s). */
+/** Privy auth + the signed-in user's TxLINE-priced devnet position view (refreshes every 30s). */
 export function useTraderWallet() {
   const { ready, authenticated, user, login, logout, getAccessToken } = usePrivy();
 

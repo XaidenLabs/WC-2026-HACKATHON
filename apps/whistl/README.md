@@ -9,8 +9,8 @@ protocol on Solana. Two people wager on a verifiable World Cup stat, funds lock 
 escrow, and when the match ends **anyone** can settle: the on-chain program CPIs directly
 into TxODDS's `validate_stat` and pays the winner in the same transaction.
 
-[![Solana](https://img.shields.io/badge/Solana-Devnet-14F195?style=for-the-badge&logo=solana&logoColor=black)](https://explorer.solana.com/address/BZ2pNdsvpYmeC3dfLKzpKWKqqqKxPBHMPTYr3qVTMRTz?cluster=devnet)
-[![Anchor](https://img.shields.io/badge/Anchor-Program_Live-512BD4?style=for-the-badge)](https://explorer.solana.com/address/BZ2pNdsvpYmeC3dfLKzpKWKqqqKxPBHMPTYr3qVTMRTz?cluster=devnet)
+[![Solana](https://img.shields.io/badge/Solana-Devnet-14F195?style=for-the-badge&logo=solana&logoColor=black)](https://explorer.solana.com/address/9xe1gCVh7kNqjfRbidVUpWBcS2A4EstvkBMkxc34LWRR?cluster=devnet)
+[![Anchor](https://img.shields.io/badge/Anchor-Program_Live-512BD4?style=for-the-badge)](https://explorer.solana.com/address/9xe1gCVh7kNqjfRbidVUpWBcS2A4EstvkBMkxc34LWRR?cluster=devnet)
 [![Next.js](https://img.shields.io/badge/Next.js_16-000000?style=for-the-badge&logo=nextdotjs)](https://nextjs.org)
 
 **Runs on** `http://localhost:3000`

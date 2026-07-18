@@ -9,7 +9,7 @@ export const WHISTL_IDL = idlJson as Idl;
 export const WHISTL_PROGRAM_ID = new PublicKey((idlJson as { address: string }).address);
 export const TXLINE_PROGRAM_ID = new PublicKey("6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J");
 export const TEST_USDC_MINT = new PublicKey(
-  process.env.NEXT_PUBLIC_TEST_USDC_MINT ?? "9yMEQEc1zVPW51TaySe228544zkp3BFHWjpQM7qxcGyA",
+  process.env.NEXT_PUBLIC_TEST_USDC_MINT ?? "39JZ9WAeAsFPGarDJ6NAAKvNQka1xoQDz44KB2rMQCc9",
 );
 export const USDC_DECIMALS = 6;
 
@@ -255,4 +255,3 @@ export async function buildSaveCommentary(
     })
     .instruction();
 }
-

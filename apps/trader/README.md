@@ -10,7 +10,7 @@ compile, backtest, and deploy your **own** trading agent against real TxLINE odd
 is inscribed on Solana and settled by a TxLINE proof: no black box, no admin.
 
 [![Next.js](https://img.shields.io/badge/Next.js_16-000000?style=for-the-badge&logo=nextdotjs)](https://nextjs.org)
-[![Solana](https://img.shields.io/badge/Solana-Devnet-14F195?style=for-the-badge&logo=solana&logoColor=black)](https://explorer.solana.com/address/BZ2pNdsvpYmeC3dfLKzpKWKqqqKxPBHMPTYr3qVTMRTz?cluster=devnet)
+[![Solana](https://img.shields.io/badge/Solana-Devnet-14F195?style=for-the-badge&logo=solana&logoColor=black)](https://explorer.solana.com/address/9xe1gCVh7kNqjfRbidVUpWBcS2A4EstvkBMkxc34LWRR?cluster=devnet)
 [![Charts](https://img.shields.io/badge/Charts-lightweight--charts-FF5F1F?style=for-the-badge)](https://tradingview.github.io/lightweight-charts/)
 
 **Runs on** `http://localhost:3000`
@@ -20,7 +20,7 @@ is inscribed on Solana and settled by a TxLINE proof: no black box, no admin.
 ---
 
 > **The pitch.** ORA is an on-chain AI that reads every World Cup market and calls its pick.
-> Tap once to back it with your free paper wallet, and you win if ORA's right. Or go a level
+> Tap once to back it in the live-data devnet environment, and you win if ORA's right. Or go a level
 > deeper: describe a strategy in plain English, watch it compile, backtest it on real odds
 > history, and deploy it as a live agent that trades for you.
 

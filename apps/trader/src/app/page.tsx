@@ -17,7 +17,7 @@ const STEPS = [
     icon: <MousePointerClick className="size-4" />,
     n: "02",
     t: "You tap Back",
-    d: "One tap backs ORA's pick with your free paper wallet. No forms, no picking · just follow the AI.",
+    d: "One tap opens a live-data devnet position from a TxLINE quote. No forms, no picking · just follow the AI.",
   },
   {
     icon: <Trophy className="size-4" />,
@@ -49,7 +49,7 @@ export default function Landing() {
               </h1>
               <p className="mt-5 max-w-xl font-sans text-sm leading-relaxed text-gray-400 sm:text-base">
                 ORA is an on-chain AI that reads every World Cup market and calls its pick. Tap once to back it
-                with your free paper wallet · you win if ORA&apos;s right. Every call is inscribed on Solana and
+                with a live-data devnet position · you win if ORA&apos;s right. Every call is inscribed on Solana and
                 settled by a TxLINE proof. No black box, no admin.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
