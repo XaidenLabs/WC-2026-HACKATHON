@@ -25,9 +25,9 @@ export type SharpAlert = {
   headline: string;
 };
 
-export const SHARP_PP = 10; // ≥10pp swing = sharp money
-export const NOTABLE_PP = 4; // ≥4pp swing = notable move
-const NOISE_PP = 0.5; // ignore sub-0.5pp jitter
+export const SHARP_PP = 2; // ≥2pp swing = sharp money (lowered for demo)
+export const NOTABLE_PP = 1; // ≥1pp swing = notable move
+const NOISE_PP = 0.1; // ignore sub-0.1pp jitter
 
 type OddsWithTs = TxOddsEntry & { Ts?: number };
 type Candidate = { outcome: string; from: number | null; to: number | null };
