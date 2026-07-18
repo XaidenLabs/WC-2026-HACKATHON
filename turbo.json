@@ -1,5 +1,16 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "TXLINE_API_TOKEN",
+    "PRIVY_APP_SECRET",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "ORA_SECRET_BASE58",
+    "MINT_AUTHORITY_SECRET_BASE58",
+    "ACE_API_KEY",
+    "TELEGRAM_BOT_TOKEN",
+    "CRON_SECRET",
+    "NEXT_PUBLIC_*"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

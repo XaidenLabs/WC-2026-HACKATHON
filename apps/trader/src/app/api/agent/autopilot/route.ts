@@ -62,7 +62,7 @@ export async function GET(req: Request) {
     let scanned = 0;
     let valueFound = 0;
     const inscribed: (AgentCall & { fixtureId: number; evPct: number; signature: string; explorerUrl: string })[] = [];
-    const passed: { match: string; reason: string }[] = [];
+    const passed: { match: string; reason: string; receipt?: string; explorerUrl?: string }[] = [];
 
     for (const f of candidates) {
       if (inscribed.length >= MAX_INSCRIBE) break;
