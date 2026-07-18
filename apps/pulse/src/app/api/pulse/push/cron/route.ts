@@ -34,7 +34,7 @@ export async function GET() {
     });
 
     for (const f of liveFixtures) {
-      const events = await getScoresSnapshot(f.FixtureId) as any[];
+      const events = await getScoresSnapshot(f.FixtureId);
       const score = parseCurrentScore(events);
       if (!score) continue;
 
@@ -76,8 +76,8 @@ export async function GET() {
         for (const sub of subs) {
           try {
             await webpush.sendNotification(sub, payload);
-          } catch (e: any) {
-            if (e.statusCode === 410) {
+          } catch (e) {
+            if (typeof e === "object" && e !== null && "statusCode" in e && e.statusCode === 410) {
               // subscription expired/unsubscribed
             } else {
               console.error("Push error:", e);
@@ -94,7 +94,7 @@ export async function GET() {
     }
 
     return NextResponse.json({ ok: true, checked: liveFixtures.length });
-  } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+  } catch (err) {
+    return NextResponse.json({ ok: false, error: err instanceof Error ? err.message : "Push cron failed" }, { status: 500 });
   }
 }

@@ -4,17 +4,15 @@ import Link from "next/link";
 import useSWR from "swr";
 import { ShieldCheck, ArrowUpRight } from "lucide-react";
 import { cn, fetcher } from "@/lib/ui";
-import type { LedgerCall, LedgerMetrics, LedgerRecord } from "@/components/AgentLedger";
+import type { LedgerCall, LedgerRecord } from "@/components/AgentLedger";
 
-/** Hero card: ORA's LIVE verifiable P&L, read from its real Solana call history. */
+/** Hero card: ORA's public Solana-attested decision stream. */
 export default function OraLiveCard() {
-  const { data } = useSWR<{ ok: boolean; calls: LedgerCall[]; record?: LedgerRecord; metrics?: LedgerMetrics | null }>(
+  const { data } = useSWR<{ ok: boolean; calls: LedgerCall[]; record?: LedgerRecord }>(
     "/api/agent/ledger", fetcher, { refreshInterval: 30_000 },
   );
-  const m = data?.metrics ?? null;
   const rec = data?.record;
   const last = data?.calls?.[0] ?? null;
-  const up = m ? m.bankroll >= m.startingBankroll : true;
 
   return (
     <Link href="/ora"
@@ -26,19 +24,14 @@ export default function OraLiveCard() {
         <span className="flex items-center gap-1 text-gray-500 group-hover:text-emerald-400">command center <ArrowUpRight className="size-3" /></span>
       </div>
 
-      <p className="mt-3 text-[10px] uppercase tracking-wider text-gray-500">Verifiable bankroll</p>
-      <p className={cn("font-mono text-3xl font-bold tabular-nums", up ? "text-emerald-400" : "text-red-400")}>
-        {m ? m.bankroll.toFixed(2) : "…"} <span className="text-sm font-normal text-gray-500">USDC</span>
-      </p>
-      <p className="text-[11px] text-gray-500">
-        {m ? `${m.startingBankroll} start · ` : ""}
-        {m && <span className={m.netPnl >= 0 ? "text-emerald-400" : "text-red-400"}>{m.netPnl >= 0 ? "+" : ""}{m.netPnl} P&amp;L</span>}
-      </p>
+      <p className="mt-3 text-[10px] uppercase tracking-wider text-gray-500">Public decision log</p>
+      <p className="mt-1 text-lg font-bold text-white">Research calls with receipts</p>
+      <p className="mt-1 text-[11px] text-gray-500">Each published call is independently traceable on Solana.</p>
 
       <div className="mt-3 grid grid-cols-3 gap-2 text-center">
         <Cell label="RECORD" value={rec ? `${rec.won}W·${rec.lost}L` : "·"} />
-        <Cell label="HIT RATE" value={m ? `${Math.round(m.hitRate * 100)}%` : "·"} />
-        <Cell label="RETURN" value={m ? `${m.roi >= 0 ? "+" : ""}${(m.roi * 100).toFixed(1)}%` : "·"} accent={m ? m.roi >= 0 : true} />
+        <Cell label="SETTLED" value={rec ? String(rec.won + rec.lost) : "·"} />
+        <Cell label="OPEN" value={rec ? String(rec.pending) : "·"} accent />
       </div>
 
       {last && (
@@ -47,7 +40,7 @@ export default function OraLiveCard() {
         </p>
       )}
       <p className="mt-3 flex items-center gap-1.5 border-t border-white/5 pt-3 text-[10px] text-gray-500">
-        <ShieldCheck className="size-3 text-emerald-500" /> every call inscribed on Solana · settled by TxLINE proof
+        <ShieldCheck className="size-3 text-emerald-500" /> calls inscribed on Solana · results read from TxLINE
       </p>
     </Link>
   );

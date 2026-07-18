@@ -29,7 +29,7 @@ function parse(raw: string, sig: string, blockTime: number | null | undefined): 
   if (text.startsWith("ORA·WHISTL")) {
     const parts = text.split(" | ");
     if (parts.length < 4) return null;
-    let rest = parts.slice(3).join(" | ").split(" || MKT: ")[0];
+    const rest = parts.slice(3).join(" | ").split(" || MKT: ")[0];
     const dash = rest.indexOf(" · ");
     const headline = (dash >= 0 ? rest.slice(0, dash) : rest).trim();
     const analysis = dash >= 0 ? rest.slice(dash + 3).trim() : "";

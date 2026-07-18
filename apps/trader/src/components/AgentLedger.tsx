@@ -2,7 +2,6 @@
 
 import useSWR from "swr";
 import { ShieldCheck, ExternalLink, TrendingUp, TrendingDown } from "lucide-react";
-import { LineChart, Line, YAxis, XAxis, ResponsiveContainer, Tooltip, ReferenceLine } from "recharts";
 import { cn, fetcher } from "@/lib/ui";
 import { oddsLabel, selectionShort, sideVerb } from "@/lib/agent/humanize";
 
@@ -25,12 +24,11 @@ export default function AgentLedger({ fixtureId, refreshMs = 20_000 }: { fixture
   const key = fixtureId ? `/api/agent/ledger?fixtureId=${fixtureId}` : "/api/agent/ledger";
   const { data } = useSWR<LedgerResp>(key, fetcher, { refreshInterval: refreshMs });
   const calls = data?.calls ?? [];
-  const metrics = data?.metrics ?? null;
   const record = data?.record;
 
   return (
     <div>
-      {metrics && <WalletDashboard metrics={metrics} record={record} />}
+      <DecisionAudit record={record} total={calls.length} />
       {calls.length === 0 ? (
         <div className="mt-4 flex h-28 items-center justify-center rounded-lg border border-dashed border-white/10 px-4 text-center text-xs text-gray-600">
           {fixtureId ? "ORA hasn't taken a position on this match yet." : "No verifiable calls yet · deploy ORA to make its first."}
@@ -44,22 +42,14 @@ export default function AgentLedger({ fixtureId, refreshMs = 20_000 }: { fixture
   );
 }
 
-export function WalletDashboard({ metrics, record }: { metrics: LedgerMetrics; record?: LedgerRecord }) {
-  const up = metrics.bankroll >= metrics.startingBankroll;
+function DecisionAudit({ record, total }: { record?: LedgerRecord; total: number }) {
   return (
     <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/[0.03] p-4">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <p className="text-[9px] uppercase tracking-wider text-gray-500">ORA Wallet · bankroll</p>
-          <p className={cn("mt-0.5 font-mono text-2xl font-bold tabular-nums", up ? "text-emerald-400" : "text-red-400")}>
-            {metrics.bankroll.toFixed(2)} <span className="text-xs font-normal text-gray-500">USDC</span>
-          </p>
-          <p className="text-[10px] text-gray-500">
-            {metrics.startingBankroll} start ·{" "}
-            <span className={metrics.netPnl >= 0 ? "text-emerald-400" : "text-red-400"}>
-              {metrics.netPnl >= 0 ? "+" : ""}{metrics.netPnl} P&amp;L
-            </span>
-          </p>
+          <p className="text-[9px] uppercase tracking-wider text-gray-500">ORA decision audit</p>
+          <p className="mt-0.5 font-mono text-2xl font-bold tabular-nums text-white">{total} <span className="text-xs font-normal text-gray-500">published calls</span></p>
+          <p className="text-[10px] text-gray-500">Public research attestations — not a managed fund or a performance claim.</p>
         </div>
         <div className="space-y-0.5 text-right font-mono text-[10px] text-gray-500">
           <p>
@@ -67,26 +57,9 @@ export function WalletDashboard({ metrics, record }: { metrics: LedgerMetrics; r
             <span className="font-bold text-red-400">{record?.lost ?? 0}L</span>
             {record?.pending ? ` · ${record.pending} open` : ""}
           </p>
-          <p>hit rate <span className="text-white">{Math.round(metrics.hitRate * 100)}%</span></p>
-          <p>return <span className={metrics.roi >= 0 ? "text-emerald-400" : "text-red-400"}>{metrics.roi >= 0 ? "+" : ""}{(metrics.roi * 100).toFixed(1)}%</span></p>
+          <p>every call has a receipt</p>
         </div>
       </div>
-      {metrics.equity.length > 1 ? (
-        <div className="mt-3 h-20 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={metrics.equity}>
-              <ReferenceLine y={metrics.startingBankroll} stroke="#333" strokeDasharray="3 3" />
-              <YAxis hide domain={["auto", "auto"]} />
-              <XAxis dataKey="i" hide />
-              <Tooltip contentStyle={{ backgroundColor: "#000", borderColor: "#333", fontSize: 10, fontFamily: "monospace" }}
-                formatter={(v) => [`${v} USDC`, "Balance"]} labelFormatter={() => ""} />
-              <Line type="monotone" dataKey="bankroll" stroke={up ? "#10b981" : "#f43f5e"} strokeWidth={2} dot={false} isAnimationActive />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      ) : (
-        <p className="mt-2 text-[10px] text-gray-600">Balance updates automatically as ORA&apos;s calls settle against real results.</p>
-      )}
     </div>
   );
 }

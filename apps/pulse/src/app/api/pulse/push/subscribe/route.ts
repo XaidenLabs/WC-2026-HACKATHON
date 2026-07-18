@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     
     addSubscription(subscription);
     return NextResponse.json({ ok: true });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Failed to parse subscription" }, { status: 400 });
   }
 }

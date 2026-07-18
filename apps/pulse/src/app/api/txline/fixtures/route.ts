@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     const { getScoresSnapshot } = await import("@/lib/txline/server");
     const { parseCurrentScore } = await import("@/lib/txline/types");
     
-    let fixtures = await getFixtures({
+    const fixtures = await getFixtures({
       startEpochDay: startEpochDay ? Number(startEpochDay) : undefined,
       competitionId: competitionId ? Number(competitionId) : undefined,
     });
@@ -21,9 +21,9 @@ export async function GET(request: Request) {
     const fixturesWithScores = await Promise.all(fixtures.map(async (f) => {
       try {
         const events = await getScoresSnapshot(f.FixtureId);
-        const score = parseCurrentScore(events as any[]);
+        const score = parseCurrentScore(events);
         return { ...f, score };
-      } catch (e) {
+      } catch {
         return f; // fallback if score fetch fails
       }
     }));

@@ -298,15 +298,10 @@ async function settlePact(
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
   let txSig: string | null = null;
 
-  // Detect demo pacts (non-numeric IDs like "demo-001") — skip on-chain, just log outcome.
+  // Only a numeric on-chain pact id may produce a settlement or payout.
   const isNumericId = /^\d+$/.test(pact.pactId);
   if (!isNumericId) {
-    push(fixtureId, "settle_done",
-      isTrue
-        ? `[demo] ${pact.statement} = TRUE ✓ · creator wins ${pact.stakeUsdc * 2} USDC`
-        : `[demo] ${pact.statement} = FALSE ✗ · ORA wins ${pact.stakeUsdc * 2} USDC`,
-      { pactId: pact.pactId, data: { isTrue, val, demo: true, statement: pact.statement, totalPayout: pact.stakeUsdc * 2 } },
-    );
+    push(fixtureId, "settle_error", "Replay pact cannot settle or pay out. Create an on-chain pact first.", { pactId: pact.pactId });
   } else {
     // Step 1: Submit settle_pact on-chain via ORA (proof fetch + CPI validate_stat + payout).
     push(fixtureId, "settle_proof", `Fetching Merkle proof (statKey ${pact.terms.statAKey}${pact.terms.hasStatB ? `·${pact.terms.statBKey}` : ""}) from TxLINE…`);
@@ -335,29 +330,12 @@ async function settlePact(
       } else {
         const errBody = await settleRes?.json().catch(() => ({}));
         const reason = errBody?.error ?? `HTTP ${settleRes?.status ?? "?"}`;
-        if (reason === "PACT_NOT_ACCEPTED" || reason === "PACT_NOT_OPEN") {
-          push(fixtureId, "settle_done",
-            isTrue
-              ? `[demo] ${pact.statement} = TRUE ✓ · creator wins ${pact.stakeUsdc * 2} USDC`
-              : `[demo] ${pact.statement} = FALSE ✗ · ORA wins ${pact.stakeUsdc * 2} USDC`,
-            { pactId: pact.pactId, data: { isTrue, val, demo: true, statement: pact.statement, totalPayout: pact.stakeUsdc * 2 } },
-          );
-        } else {
-          push(fixtureId, "settle_error", `Settlement failed: ${reason}`, { pactId: pact.pactId });
-        }
+        push(fixtureId, "settle_error", `Settlement failed: ${reason}`, { pactId: pact.pactId });
       }
     } catch (e) {
       push(fixtureId, "settle_error", `Settlement error: ${(e as Error).message}`, { pactId: pact.pactId });
     }
   }
-
-  // Step 2: Update Supabase record (best-effort).
-  fetch(`${BASE_URL}/api/pacts/${pact.pactId}/settle`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ isTrue, finalValue: val, txSig }),
-    cache: "no-store",
-  }).catch(() => {});
 }
 
 // ─── Replay engine ────────────────────────────────────────────────────────────

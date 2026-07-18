@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   try {
     const oddsData = await getOddsSnapshot(fixtureId);
     // Parse 1X2 market to make it easy for frontend
-    const odds = parse1X2(oddsData as any);
+    const odds = parse1X2(oddsData);
     return NextResponse.json({ ok: true, odds });
   } catch (e) {
     if (e instanceof TxlineTokenMissing) {

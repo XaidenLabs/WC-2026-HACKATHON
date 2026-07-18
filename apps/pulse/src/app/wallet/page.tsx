@@ -365,7 +365,7 @@ function RecentActivity({ getAccessToken }: { getAccessToken: () => Promise<stri
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function WalletPage() {
-  const { ready, authenticated, login, getAccessToken } = usePrivy();
+  const { ready, getAccessToken } = usePrivy();
   const { usdc, sol, loading, refresh, walletAddress } = useBalance();
   const [tab, setTab] = useState<"topup" | "withdraw">("topup");
 

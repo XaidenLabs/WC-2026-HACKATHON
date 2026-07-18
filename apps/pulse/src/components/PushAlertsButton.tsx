@@ -19,6 +19,7 @@ function urlBase64ToUint8Array(base64String: string) {
 export default function PushAlertsButton() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
   useEffect(() => {
     if ("serviceWorker" in navigator && "PushManager" in window) {
@@ -31,6 +32,7 @@ export default function PushAlertsButton() {
   }, []);
 
   async function subscribe() {
+    if (!vapidPublicKey) return;
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       alert("Push notifications are not supported by your browser.");
       return;
@@ -47,9 +49,7 @@ export default function PushAlertsButton() {
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(
-          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY as string
-        ),
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
       });
 
       await fetch("/api/pulse/push/subscribe", {
@@ -67,6 +67,10 @@ export default function PushAlertsButton() {
     }
   }
 
+  // Never invite a judge to enable a feature that the deployment has not been
+  // configured to deliver. The CTA appears automatically once VAPID is set.
+  if (!vapidPublicKey) return null;
+
   if (isSubscribed) {
     return (
       <div className="mb-7 flex items-center justify-between rounded-2xl border border-proof/30 bg-proof/8 p-4">
@@ -76,7 +80,7 @@ export default function PushAlertsButton() {
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-text">Goal Alerts Active</p>
-            <p className="truncate text-xs text-text-dim">You'll be notified of live goals.</p>
+            <p className="truncate text-xs text-text-dim">You&apos;ll be notified of live goals.</p>
           </div>
         </div>
       </div>

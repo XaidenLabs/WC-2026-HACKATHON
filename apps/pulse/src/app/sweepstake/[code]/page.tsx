@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2, ArrowLeft, Trophy, Activity, LogIn, Copy } from "lucide-react";
 import { getMembership, saveMembership, type Membership } from "@/lib/pulse/membership";
@@ -16,13 +16,12 @@ type SweepstakeData = {
 export default function SweepstakeDetail() {
   const params = useParams();
   const code = String(params.code).toUpperCase();
-  const router = useRouter();
 
   const [data, setData] = useState<SweepstakeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  const [membership, setMembership] = useState<Membership | null>(null);
+  const [membership, setMembership] = useState<Membership | null>(() => getMembership(code));
 
   // Join form state
   const [joinName, setJoinName] = useState("");
@@ -31,15 +30,7 @@ export default function SweepstakeDetail() {
 
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    setMembership(getMembership(code));
-    fetchData();
-    // Auto-refresh leaderboard every 30s
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
-  }, [code]);
-
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     try {
       const res = await fetch(`/api/pulse/sweepstake/${code}`);
       const json = await res.json();
@@ -48,12 +39,22 @@ export default function SweepstakeDetail() {
       } else {
         setData(json);
       }
-    } catch (e) {
+    } catch {
       setError("Network error");
     } finally {
       setLoading(false);
     }
-  }
+  }, [code]);
+
+  useEffect(() => {
+    const initial = window.setTimeout(fetchData, 0);
+    // Auto-refresh leaderboard every 30s
+    const interval = setInterval(fetchData, 30000);
+    return () => {
+      window.clearTimeout(initial);
+      clearInterval(interval);
+    };
+  }, [fetchData]);
 
   async function join() {
     if (!joinName.trim() || !data) return;

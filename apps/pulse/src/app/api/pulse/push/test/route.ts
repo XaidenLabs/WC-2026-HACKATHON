@@ -18,7 +18,6 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const p1 = url.searchParams.get("p1") || "Germany";
-    const p2 = url.searchParams.get("p2") || "Paraguay";
     const scorer = url.searchParams.get("scorer") || p1;
     const score = url.searchParams.get("score") || "1 - 0";
 
@@ -44,7 +43,7 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json({ ok: true, sent });
-  } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+  } catch (err) {
+    return NextResponse.json({ ok: false, error: err instanceof Error ? err.message : "Push test failed" }, { status: 500 });
   }
 }

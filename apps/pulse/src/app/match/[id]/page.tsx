@@ -93,28 +93,17 @@ export default function MatchView() {
 
   // --- WOW FEATURE 2: Micro-Predictions ---
   const [prediction, setPrediction] = useState<{ minute: number, targetCorners: number } | null>(null);
-  const [predictionStatus, setPredictionStatus] = useState<"pending" | "won" | "lost" | null>(null);
-
   const handlePredict = () => {
     if (!score) return;
     setPrediction({ minute: score.minute ?? 0, targetCorners: score.p1Corners + score.p2Corners });
-    setPredictionStatus("pending");
   };
-
-  useEffect(() => {
-    if (prediction && predictionStatus === "pending" && score) {
-      const currentCorners = score.p1Corners + score.p2Corners;
-      const currentMinute = score.minute ?? 0;
-      if (currentCorners > prediction.targetCorners && currentMinute <= prediction.minute + 10) {
-        setPredictionStatus("won");
-        import("canvas-confetti").then((confetti) => {
-          confetti.default({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-        });
-      } else if (currentMinute > prediction.minute + 10) {
-        setPredictionStatus("lost");
-      }
-    }
-  }, [score, prediction, predictionStatus]);
+  const predictionStatus = !prediction || !score
+    ? null
+    : score.p1Corners + score.p2Corners > prediction.targetCorners && (score.minute ?? 0) <= prediction.minute + 10
+      ? "won"
+      : (score.minute ?? 0) > prediction.minute + 10
+        ? "lost"
+        : "pending";
 
   // --- WOW FEATURE 3: Audio AI Commentator ---
   const playTTS = (text: string) => {
@@ -234,7 +223,7 @@ export default function MatchView() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-text-dim">Your Prediction</p>
-                <p className="text-sm text-text font-medium">Corner before {prediction.minute + 10}'</p>
+                <p className="text-sm text-text font-medium">Corner before {prediction.minute + 10}&apos;</p>
               </div>
               <div className="text-right">
                 {predictionStatus === "pending" && <span className="text-xs font-mono text-signal animate-pulse">Monitoring...</span>}

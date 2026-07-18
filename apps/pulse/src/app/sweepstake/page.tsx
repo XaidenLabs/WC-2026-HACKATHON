@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Users, Plus, LogIn, Loader2, ChevronRight, Trophy } from "lucide-react";
@@ -8,9 +8,7 @@ import { getMemberships, saveMembership, type Membership } from "@/lib/pulse/mem
 
 export default function SweepstakeIndex() {
   const router = useRouter();
-  const [groups, setGroups] = useState<Record<string, Membership>>({});
-
-  useEffect(() => setGroups(getMemberships()), []);
+  const [groups] = useState<Record<string, Membership>>(() => getMemberships());
   const entries = Object.entries(groups);
 
   // Create form

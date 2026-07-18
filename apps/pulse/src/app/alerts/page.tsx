@@ -3,7 +3,7 @@
 import useSWR from "swr";
 import Link from "next/link";
 import {
-  Zap, ArrowUp, ArrowDown, ChevronRight, Radio, Loader2, Activity,
+  Zap, ArrowUp, ArrowDown, ChevronRight, Radio, Activity,
 } from "lucide-react";
 import type { SharpAlert } from "@/lib/pulse/sharp";
 

@@ -47,9 +47,13 @@ export function useBalance(): Balance {
   }, [walletAddress]);
 
   useEffect(() => {
-    refresh();
+    // Start the RPC read after paint; subsequent reads are interval-driven.
+    const initial = window.setTimeout(refresh, 0);
     const id = setInterval(refresh, POLL_MS);
-    return () => clearInterval(id);
+    return () => {
+      window.clearTimeout(initial);
+      clearInterval(id);
+    };
   }, [refresh]);
 
   return { usdc, sol, loading, walletAddress, refresh };

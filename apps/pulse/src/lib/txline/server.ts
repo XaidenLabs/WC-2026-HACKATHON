@@ -6,7 +6,7 @@ import "server-only";
 //   Authorization: Bearer <guest session JWT>   (POST /auth/guest/start, ~30d)
 //   X-Api-Token:   <activated API token>        (env TXLINE_API_TOKEN)
 
-import type { TxFixture, StatValidation } from "./types";
+import type { TxFixture, TxOddsEntry, TxScoreEvent, StatValidation } from "./types";
 
 // Devnet API host (confirmed by TxODDS). `txline.txodds.com` routes to mainnet.
 const BASE = "https://txline-dev.txodds.com";
@@ -61,12 +61,12 @@ export function getFixtures(opts: { startEpochDay?: number; competitionId?: numb
 
 /** GET /api/scores/snapshot/{fixtureId} — latest score event per action for a fixture. */
 export function getScoresSnapshot(fixtureId: number) {
-  return txGet<unknown[]>(`/api/scores/snapshot/${fixtureId}`);
+  return txGet<TxScoreEvent[]>(`/api/scores/snapshot/${fixtureId}`);
 }
 
 /** GET /api/scores/historical/{fixtureId} — full sequence of score updates (2 weeks → 6h past). */
 export function getScoresHistorical(fixtureId: number) {
-  return txGet<unknown[]>(`/api/scores/historical/${fixtureId}`);
+  return txGet<TxScoreEvent[]>(`/api/scores/historical/${fixtureId}`);
 }
 
 /** GET /api/scores/stat-validation — the 3-stage Merkle proof for a stat (settlement input). */
@@ -88,5 +88,5 @@ export function getStatValidation(p: {
 /** GET /api/odds/snapshot/{fixtureId} — current odds (each payload carries pre-computed Pct[]). */
 export function getOddsSnapshot(fixtureId: number, asOf?: number) {
   const q = asOf != null ? `?asOf=${asOf}` : "";
-  return txGet<unknown[]>(`/api/odds/snapshot/${fixtureId}${q}`);
+  return txGet<TxOddsEntry[]>(`/api/odds/snapshot/${fixtureId}${q}`);
 }

@@ -2,7 +2,8 @@
 
 import useSWR from "swr";
 import Link from "next/link";
-import { Dices, ChevronRight, Radio, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Dices, ChevronRight, Sparkles } from "lucide-react";
 import PushAlertsButton from "@/components/PushAlertsButton";
 import type { TxFixture } from "@/lib/txline/types";
 import { matchPhase, kickoffLabel } from "@/lib/pulse/format";
@@ -17,16 +18,23 @@ const fetcher = (url: string) =>
 const byStartAsc = (a: TxFixture, b: TxFixture) => a.StartTime - b.StartTime;
 
 export default function PulseHome() {
+  const [now, setNow] = useState(0);
   const { data, error, isLoading } = useSWR("/api/txline/fixtures", fetcher, {
     refreshInterval: 60_000,
     revalidateOnFocus: true,
     shouldRetryOnError: false,
   });
 
+  useEffect(() => {
+    const updateNow = () => setNow(Date.now());
+    updateNow();
+    const interval = window.setInterval(updateNow, 30_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
   const fixtures = Array.from(
     new Map((data?.fixtures ?? []).map((f) => [f.FixtureId, f])).values()
   );
-  const now = Date.now();
   const live = fixtures.filter((f) => matchPhase(f.StartTime, now) === "live").sort(byStartAsc);
   const upcoming = fixtures.filter((f) => matchPhase(f.StartTime, now) === "upcoming").sort(byStartAsc);
   const finished = fixtures
@@ -79,7 +87,7 @@ export default function PulseHome() {
       {live.length > 0 && (
         <Section title="Live now" accent>
           {live.map((f) => (
-            <MatchRow key={f.FixtureId} fixture={f} />
+            <MatchRow key={f.FixtureId} fixture={f} now={now} />
           ))}
         </Section>
       )}
@@ -88,7 +96,7 @@ export default function PulseHome() {
       {upcoming.length > 0 && (
         <Section title="Up next">
           {upcoming.slice(0, 12).map((f) => (
-            <MatchRow key={f.FixtureId} fixture={f} />
+            <MatchRow key={f.FixtureId} fixture={f} now={now} />
           ))}
         </Section>
       )}
@@ -97,7 +105,7 @@ export default function PulseHome() {
       {finished.length > 0 && (
         <Section title="Recent results">
           {finished.map((f) => (
-            <MatchRow key={f.FixtureId} fixture={f} />
+            <MatchRow key={f.FixtureId} fixture={f} now={now} />
           ))}
         </Section>
       )}
@@ -125,9 +133,9 @@ function Section({ title, accent, children }: { title: string; accent?: boolean;
   );
 }
 
-function MatchRow({ fixture }: { fixture: TxFixture & { score?: { p1Goals: number, p2Goals: number, minutes?: number } } }) {
-  const phase = matchPhase(fixture.StartTime);
-  const label = kickoffLabel(fixture.StartTime);
+function MatchRow({ fixture, now }: { fixture: TxFixture & { score?: { p1Goals: number, p2Goals: number, minutes?: number } }; now: number }) {
+  const phase = matchPhase(fixture.StartTime, now);
+  const label = kickoffLabel(fixture.StartTime, now);
 
   return (
     <Link
@@ -176,21 +184,6 @@ function MatchRow({ fixture }: { fixture: TxFixture & { score?: { p1Goals: numbe
         </div>
       </div>
     </Link>
-  );
-}
-
-function PhasePill({ phase, label }: { phase: ReturnType<typeof matchPhase>; label: string }) {
-  if (phase === "live") {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-signal/40 bg-signal/10 px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-signal">
-        <Radio className="size-2.5" aria-hidden /> Live
-      </span>
-    );
-  }
-  return (
-    <span className="rounded-full border border-line bg-ink-3 px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-text-dim">
-      {label}
-    </span>
   );
 }
 
