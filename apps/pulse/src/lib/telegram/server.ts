@@ -39,7 +39,7 @@ export async function addSub(chatId: number) {
 export async function removeSub(chatId: number) {
   await supabaseAdmin().from("telegram_subs").delete().eq("bot", botName()).eq("chat_id", chatId);
 }
-async function getSubs(): Promise<number[]> {
+export async function getSubs(): Promise<number[]> {
   const { data } = await supabaseAdmin().from("telegram_subs").select("chat_id").eq("bot", botName());
   return (data ?? []).map((r: { chat_id: number }) => r.chat_id);
 }
