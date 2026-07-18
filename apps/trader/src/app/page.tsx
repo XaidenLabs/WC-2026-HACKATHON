@@ -17,13 +17,13 @@ const STEPS = [
     icon: <MousePointerClick className="size-4" />,
     n: "02",
     t: "You tap Back",
-    d: "One tap opens a live-data devnet position from a TxLINE quote. No forms, no picking · just follow the AI.",
+    d: "Save a live-data research read, or open a real devnet WHISTL escrow pact when you want funds on-chain.",
   },
   {
     icon: <Trophy className="size-4" />,
     n: "03",
     t: "Win on the real result",
-    d: "When the match ends, your bet settles automatically against the real TxLINE score. Right = you keep the winnings.",
+    d: "WHISTL escrow pacts settle against the real TxLINE score. Research reads stay clearly separated from funds.",
   },
 ];
 
@@ -49,8 +49,8 @@ export default function Landing() {
               </h1>
               <p className="mt-5 max-w-xl font-sans text-sm leading-relaxed text-gray-400 sm:text-base">
                 ORA is an on-chain AI that reads every World Cup market and calls its pick. Tap once to back it
-                with a live-data devnet position · you win if ORA&apos;s right. Every call is inscribed on Solana and
-                settled by a TxLINE proof. No black box, no admin.
+                with a live-data research read—or open a real WHISTL escrow pact. Every ORA decision is inscribed
+                on Solana and every result is checked against TxLINE. No black box, no admin.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link href="/markets" className="rounded-lg bg-emerald-500 px-5 py-3 text-sm font-bold text-black transition-opacity hover:opacity-90">
@@ -77,15 +77,15 @@ export default function Landing() {
                 </h2>
                 <p className="mt-4 max-w-xl font-sans text-sm leading-relaxed text-gray-400 sm:text-base">
                   ORA reads every World Cup market and names its pick · the outcome its model rates highest,
-                  with the exact payout you&apos;d earn. Every quote, call and settlement is inscribed on Solana,
-                  so its win-rate and P&amp;L are provable by anyone. No black box. No admin. Flip on
+                  with a transparent risk mandate. Every decision and refusal is inscribed on Solana, while real
+                  escrow settlement lives in WHISTL. No black box. No admin. Flip on
                   <span className="text-emerald-300"> AI predictions</span> in the markets and ORA prices the whole board for you.
                 </p>
                 <div className="mt-7 grid max-w-lg grid-cols-3 gap-3">
                   {[
                     ["Reads the board", "Fair value from live TxLINE odds"],
-                    ["Calls its pick", "Best outcome + your exact payout"],
-                    ["Proves it", "Every call on-chain, settled by proof"],
+                    ["Refuses bad trades", "4% minimum edge · hard exposure limits"],
+                    ["Proves it", "Solana decision + TxLINE result + escrow path"],
                   ].map(([t, d]) => (
                     <div key={t} className="rounded-lg border border-white/10 bg-[#0a0a0a] p-3">
                       <p className="text-[11px] font-bold text-white">{t}</p>

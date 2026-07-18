@@ -7,8 +7,7 @@ import StrategyStudio from "@/components/StrategyStudio";
 import AgentLedger from "@/components/AgentLedger";
 import OraAutopilot from "@/components/OraAutopilot";
 
-// ORA command center — the global agent hub. Compose + backtest + deploy across every live
-// market, and audit ORA's full verifiable P&L (bankroll, equity curve, on-chain call history).
+// ORA command center — compose, backtest and audit live, on-chain decision receipts.
 export default function OraCommandCenter() {
   return (
     <div className="min-h-screen bg-[#050505] font-mono text-gray-300">
@@ -25,9 +24,8 @@ export default function OraCommandCenter() {
           <div>
             <h1 className="font-sans text-2xl font-bold text-white">ORA · Command Center</h1>
             <p className="mt-2 max-w-2xl font-sans text-sm leading-relaxed text-gray-400">
-              The always-on AI counterparty. Arm the autopilot and ORA trades its value model on its own,
-              or compose your own strategy and deploy it. Every decision is inscribed on Solana and settled
-              by a TxLINE proof, a glass-skull track record nobody can edit.
+              A risk-constrained AI research agent. Arm the autopilot to audit live TxLINE markets, publish
+              every trade or refusal on Solana, and hand qualifying ideas into a real WHISTL devnet escrow pact.
             </p>
           </div>
         </div>

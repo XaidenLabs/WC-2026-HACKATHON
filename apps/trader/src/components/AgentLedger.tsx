@@ -14,7 +14,7 @@ export type LedgerMetrics = {
 export type LedgerCall = {
   strategy: string; match: string; side: "back" | "lay"; selection: "home" | "draw" | "away";
   odds: number; reasoning: string; status: CallStatus; finalScore: string | null;
-  pnl: number | null; stake: number; timestamp: number; signature: string; explorerUrl: string;
+  pnl: number | null; stake: number; timestamp: number; signature: string; explorerUrl: string; fixtureId?: number | null;
 };
 
 type LedgerResp = { ok: boolean; calls: LedgerCall[]; record?: LedgerRecord; metrics?: LedgerMetrics | null };
@@ -84,11 +84,6 @@ function LedgerCard({ c }: { c: LedgerCall }) {
       </div>
       <p className="mt-1 text-[11px] font-medium text-emerald-400">
         {sideVerb(c.side)} {selectionShort(c.selection)} · pays {oddsLabel(c.odds)}
-        {c.pnl != null && (
-          <span className={cn("ml-2 font-bold", c.pnl >= 0 ? "text-emerald-400" : "text-red-400")}>
-            {c.pnl >= 0 ? "+" : ""}{c.pnl} USDC
-          </span>
-        )}
       </p>
       <p className="mt-1 text-[11px] italic leading-relaxed text-gray-400">“{c.reasoning}”</p>
       <div className="mt-2 flex items-center justify-between text-[9px]">
@@ -100,6 +95,11 @@ function LedgerCard({ c }: { c: LedgerCall }) {
           Solana {c.signature.slice(0, 6)}… <ExternalLink className="size-2.5" />
         </a>
       </div>
+      {c.fixtureId != null && (
+        <a href={`/market/${c.fixtureId}`} className="mt-2 inline-flex text-[9px] text-gray-500 hover:text-emerald-400">
+          TxLINE fixture #{c.fixtureId} →
+        </a>
+      )}
     </div>
   );
 }

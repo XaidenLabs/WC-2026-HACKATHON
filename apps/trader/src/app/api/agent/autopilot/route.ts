@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { getFixtures, getOddsSnapshot, TxlineTokenMissing } from "@/lib/txline/server";
 import { parse1X2, type TxFixture, type TxOddsEntry } from "@/lib/txline/types";
 import { oraPick } from "@/lib/ora/pick";
-import { formatCall, parseCall, type AgentCall } from "@/lib/agent/call";
+import { formatCall, formatPass, parseCall, type AgentCall } from "@/lib/agent/call";
 import { devnetConnection, oraPubkey, inscribe, explorerUrl } from "@/lib/agent/onchain";
+import { RISK_MANDATE, riskDecision } from "@/lib/agent/risk";
 
 // GET /api/agent/autopilot — ONE autonomous ORA cycle. No human input, no strategy to configure.
 // ORA scans live TxLINE markets, runs its value model, and inscribes a call on Solana for every
@@ -15,7 +16,7 @@ import { devnetConnection, oraPubkey, inscribe, explorerUrl } from "@/lib/agent/
 // so it never spams the same match, and caps how many it fires per cycle.
 
 const MAX_SCAN = 8;
-const MAX_INSCRIBE = 3;
+const MAX_INSCRIBE = RISK_MANDATE.maxCallsPerCycle;
 
 export async function GET(req: Request) {
   // Optional cron protection: if CRON_SECRET is set, a bearer-token match is required.
@@ -46,8 +47,17 @@ export async function GET(req: Request) {
         if (!s.memo) continue;
         const c = parseCall(s.memo);
         if (c?.fixtureId != null) already.add(c.fixtureId);
+        const passFixture = s.memo.match(/TxAGENT PASS \|.*\| FX#(\d+)$/)?.[1];
+        if (passFixture) already.add(Number(passFixture));
       }
     } catch { /* history read failed; proceed without dedupe */ }
+
+    const dayStart = new Date(now).setUTCHours(0, 0, 0, 0);
+    let callsToday = 0;
+    try {
+      const sigs = await devnetConnection().getSignaturesForAddress(oraPubkey(), { limit: 100 });
+      callsToday = sigs.filter((s) => (s.blockTime ?? 0) * 1000 >= dayStart && Boolean(s.memo?.startsWith("TxAGENT |"))).length;
+    } catch { /* conservative evaluation still works if RPC history is briefly unavailable */ }
 
     let scanned = 0;
     let valueFound = 0;
@@ -66,8 +76,12 @@ export async function GET(req: Request) {
       if (!pick) continue;
       scanned++;
       const match = `${f.Participant1} v ${f.Participant2}`;
-      if (!pick.value) {
-        passed.push({ match, reason: "no positive expected value" });
+      const mandate = riskDecision({ evPct: pick.evPct, callsToday, callsThisCycle: inscribed.length });
+      if (!pick.value || !mandate.allowed) {
+        const reason = !pick.value ? "no positive expected value" : mandate.reason;
+        let receipt: string | undefined;
+        try { receipt = await inscribe(formatPass({ match, fixtureId: f.FixtureId, reason })); } catch { /* a pass remains visible even if the memo RPC is unavailable */ }
+        passed.push({ match, reason, receipt, explorerUrl: receipt ? explorerUrl(receipt) : undefined });
         continue;
       }
       valueFound++;
@@ -84,6 +98,7 @@ export async function GET(req: Request) {
       try {
         const signature = await inscribe(formatCall(call));
         inscribed.push({ ...call, fixtureId: f.FixtureId, evPct: pick.evPct, signature, explorerUrl: explorerUrl(signature) });
+        callsToday++;
       } catch (e) {
         console.error("[autopilot] inscribe failed:", (e as Error).message);
       }
@@ -98,6 +113,7 @@ export async function GET(req: Request) {
       inscribed: inscribed.length,
       calls: inscribed,
       passed,
+      mandate: RISK_MANDATE,
     });
   } catch (e) {
     if (e instanceof TxlineTokenMissing) return NextResponse.json({ ok: false, error: "TXLINE_TOKEN_MISSING" }, { status: 503 });

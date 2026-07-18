@@ -23,6 +23,11 @@ export function formatCall(c: AgentCall): string {
   return c.fixtureId != null ? `${base} | FX#${c.fixtureId}` : base;
 }
 
+/** A refusal is as auditable as a trade: ORA publishes why capital stayed idle. */
+export function formatPass(input: { match: string; fixtureId: number; reason: string }): string {
+  return `TxAGENT PASS | Risk Mandate | ${input.match} | ${input.reason} | FX#${input.fixtureId}`;
+}
+
 export function parseCall(raw: string): AgentCall | null {
   const text = raw.replace(/^\[\d+\]\s*/, ""); // strip "[len] " prefix from RPC memo field
   if (!text.startsWith("TxAGENT")) return null;

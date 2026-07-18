@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import useSWR from "swr";
-import { ArrowLeft, TrendingUp, TrendingDown, Loader2, Brain, Check, Lock } from "lucide-react";
+import { ArrowLeft, TrendingUp, TrendingDown, Loader2, Brain, Check, Lock, ShieldCheck, ExternalLink } from "lucide-react";
 import MatchChart, { type Candle } from "@/components/MatchChart";
 import BetModal from "@/components/BetModal";
 import Header from "@/components/Header";
@@ -167,14 +167,23 @@ export default function MarketPage() {
             </p>
             <p className="mt-1 text-[11px] italic leading-snug text-gray-500">{pick.reasoning}</p>
             {pick.value ? (
-              <button
-                onClick={() => back({ fixtureId, match: `${p1} v ${p2}`, selection: pick.selection, odds: pick.dec })}
-                disabled={backing}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-500 py-3 text-sm font-bold text-black hover:bg-emerald-400 disabled:opacity-60">
-                {backing ? <><Loader2 className="size-4 animate-spin" /> Backing…</>
-                  : !authenticated ? <><Lock className="size-3.5" /> Sign in to back ORA</>
-                  : <><Check className="size-4" /> Back ORA · 50 USDC → win {payoutOn(50, pick.dec)}</>}
-              </button>
+              <>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <button
+                    onClick={() => back({ fixtureId, match: `${p1} v ${p2}`, selection: pick.selection, odds: pick.dec })}
+                    disabled={backing}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-500 py-3 text-sm font-bold text-black hover:bg-emerald-400 disabled:opacity-60">
+                    {backing ? <><Loader2 className="size-4 animate-spin" /> Backing…</>
+                      : !authenticated ? <><Lock className="size-3.5" /> Sign in to save sandbox read</>
+                      : <><Check className="size-4" /> Save research read</>}
+                  </button>
+                  <a href={`https://whistl-pi.vercel.app/pact/new?fixture=${fixtureId}`} target="_blank" rel="noreferrer"
+                    className="flex items-center justify-center gap-2 rounded-lg border border-emerald-500/40 py-3 text-sm font-bold text-emerald-400 hover:bg-emerald-500/10">
+                    <ShieldCheck className="size-4" /> Open real escrow pact <ExternalLink className="size-3" />
+                  </a>
+                </div>
+                <p className="mt-2 text-center text-[10px] text-gray-500">Sandbox saves research only. The escrow path creates a real devnet WHISTL pact.</p>
+              </>
             ) : (
               <p className="mt-3 rounded-lg border border-white/10 py-2.5 text-center text-xs text-gray-500">ORA stands aside on the match winner</p>
             )}

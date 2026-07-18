@@ -78,37 +78,9 @@ export async function GET(req: Request) {
       pending: calls.filter((c) => c.status === "pending").length,
     };
 
-    // ── ORA's wallet/bankroll: flat 100-unit stake per call, starting balance 1000. Each
-    //    settled call credits its winnings / debits its stake, chronologically.
-    const STAKE = 100;
-    const START = 1000;
-    const settledChrono = calls.filter((c) => c.status !== "pending").sort((a, b) => a.timestamp - b.timestamp);
-    let bankroll = START;
-    let netPnl = 0;
-    let staked = 0;
-    const equity: { i: number; bankroll: number }[] = [{ i: 0, bankroll: START }];
-    const pnlBySig = new Map<string, number>();
-    settledChrono.forEach((c, idx) => {
-      const p = c.status === "won" ? STAKE * (c.odds - 1) : -STAKE;
-      bankroll += p;
-      netPnl += p;
-      staked += STAKE;
-      pnlBySig.set(c.signature, Math.round(p * 100) / 100);
-      equity.push({ i: idx + 1, bankroll: Math.round(bankroll * 100) / 100 });
-    });
-    const callsWithPnl = calls.map((c) => ({ ...c, stake: STAKE, pnl: pnlBySig.get(c.signature) ?? null }));
-
-    const settledCount = record.won + record.lost;
-    const metrics = {
-      startingBankroll: START,
-      bankroll: Math.round(bankroll * 100) / 100,
-      netPnl: Math.round(netPnl * 100) / 100,
-      staked,
-      roi: staked ? Math.round((netPnl / staked) * 1000) / 1000 : 0,
-      hitRate: settledCount ? Math.round((record.won / settledCount) * 100) / 100 : 0,
-      settled: settledCount,
-      equity,
-    };
+    // Calls are research attestations, not capital positions. Never manufacture
+    // a bankroll or P&L from memo history.
+    const callsWithPnl = calls.map((c) => ({ ...c, stake: 0, pnl: null }));
 
     // Per-match view: return only this fixture's calls (no global bankroll/equity).
     if (filterFixtureId != null) {
@@ -125,7 +97,7 @@ export async function GET(req: Request) {
       });
     }
 
-    return NextResponse.json({ ok: true, calls: callsWithPnl, record, metrics });
+    return NextResponse.json({ ok: true, calls: callsWithPnl, record, metrics: null });
   } catch (e) {
     return NextResponse.json({ ok: false, error: (e as Error).message }, { status: 500 });
   }

@@ -7,6 +7,7 @@ import useSWR from "swr";
 import { ArrowLeft, Sparkles, RefreshCw, Loader2, TrendingUp, Radio, AlertTriangle, Play } from "lucide-react";
 import type { TxFixture } from "@/lib/txline/types";
 import type { CommentaryCard } from "@/lib/pulse/commentary";
+import { readFanScore, settleFanPrediction, type FanScore } from "@/lib/pulse/fan-score";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -93,6 +94,7 @@ export default function MatchView() {
 
   // --- WOW FEATURE 2: Micro-Predictions ---
   const [prediction, setPrediction] = useState<{ minute: number, targetCorners: number } | null>(null);
+  const [fanScore, setFanScore] = useState<FanScore>(() => readFanScore());
   const handlePredict = () => {
     if (!score) return;
     setPrediction({ minute: score.minute ?? 0, targetCorners: score.p1Corners + score.p2Corners });
@@ -104,6 +106,15 @@ export default function MatchView() {
       : (score.minute ?? 0) > prediction.minute + 10
         ? "lost"
         : "pending";
+
+  useEffect(() => {
+    if (!prediction || !predictionStatus || predictionStatus === "pending") return;
+    const awardId = `${fixtureId}:${prediction.minute}:${prediction.targetCorners}`;
+    const timer = window.setTimeout(() => {
+      setFanScore(settleFanPrediction(awardId, predictionStatus === "won"));
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [fixtureId, prediction, predictionStatus]);
 
   // --- WOW FEATURE 3: Audio AI Commentator ---
   const playTTS = (text: string) => {
@@ -180,6 +191,10 @@ export default function MatchView() {
       <h1 className="mt-0.5 text-xl font-semibold tracking-tight text-text">
         {p1} <span className="text-text-dim">v</span> {p2}
       </h1>
+      <div className="mt-2 flex flex-wrap items-center gap-2 font-mono text-[10px] text-text-dim">
+        <span className="rounded-full border border-line bg-ink-2 px-2 py-1">TXLINE · fixture #{fixtureId}</span>
+        <span className="rounded-full border border-proof/30 bg-proof/5 px-2 py-1 text-proof">Fan score {fanScore.points} · {fanScore.wins} wins</span>
+      </div>
 
       {/* Score banner */}
       <div className="mt-4 flex items-center justify-between rounded-2xl border border-line bg-ink-2 px-5 py-4">
@@ -227,8 +242,8 @@ export default function MatchView() {
               </div>
               <div className="text-right">
                 {predictionStatus === "pending" && <span className="text-xs font-mono text-signal animate-pulse">Monitoring...</span>}
-                {predictionStatus === "won" && <span className="text-xs font-mono text-proof font-bold">WON! +100pts</span>}
-                {predictionStatus === "lost" && <span className="text-xs font-mono text-live font-bold">LOST</span>}
+                {predictionStatus === "won" && <span className="text-xs font-mono text-proof font-bold">WON! +100 pts</span>}
+                {predictionStatus === "lost" && <span className="text-xs font-mono text-live font-bold">MISSED · score unchanged</span>}
               </div>
             </div>
           )}
@@ -274,7 +289,7 @@ export default function MatchView() {
 
       <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-ink via-ink to-transparent pt-12 pb-6 px-4 pointer-events-none flex justify-center z-10">
         <p className="flex items-center gap-1.5 font-mono text-[10px] text-text-dim/80 pointer-events-auto bg-ink/80 px-3 py-1.5 rounded-full border border-line/50 backdrop-blur-md">
-          <Radio className="size-3" aria-hidden /> Live AI commentary · powered by real match data
+          <Radio className="size-3" aria-hidden /> TxLINE fixture #{fixtureId} · commentary refreshes live
         </p>
       </div>
     </div>

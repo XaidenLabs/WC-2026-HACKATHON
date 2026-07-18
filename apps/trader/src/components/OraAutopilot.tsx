@@ -7,6 +7,8 @@ import { cn } from "@/lib/ui";
 type Cycle = {
   ok: boolean; scanned: number; priced: number; valueFound: number; inscribed: number;
   calls: { match: string; selection: string; odds: number; evPct: number; signature: string; explorerUrl: string }[];
+  passed: { match: string; reason: string; receipt?: string; explorerUrl?: string }[];
+  mandate?: { minEvPct: number; maxCallsPerCycle: number; maxCallsPerDay: number; fixedReferenceStake: number };
   error?: string;
 };
 type Log = { time: string; msg: string; tone: "info" | "fire" | "pass" | "err"; url?: string };
@@ -34,6 +36,7 @@ export default function OraAutopilot({ onCycle }: { onCycle?: () => void }) {
       if (!j.ok) { add(`Cycle error: ${j.error ?? r.status}`, "err"); return; }
       add(`Scanned ${j.scanned} markets · priced ${j.priced} · ${j.valueFound} with value`, "info");
       if (j.inscribed === 0) add("No new value opportunities. ORA stood aside this cycle.", "pass");
+      for (const p of j.passed ?? []) add(`PASS · ${p.match}: ${p.reason}`, "pass", p.explorerUrl);
       for (const c of j.calls) {
         add(`◉ Backed ${c.selection} in ${c.match} @ ${c.odds} · EV ${c.evPct >= 0 ? "+" : ""}${c.evPct}% · inscribed on Solana`, "fire", c.explorerUrl);
       }
@@ -67,9 +70,8 @@ export default function OraAutopilot({ onCycle }: { onCycle?: () => void }) {
 
       <div className="p-4">
         <p className="text-[11px] leading-relaxed text-gray-500">
-          Arm ORA and it runs its value model over live TxLINE markets on a loop, inscribing every
-          positive expected-value call on Solana with zero human input. In production the same job
-          runs on a Vercel cron, so ORA trades even when nobody is watching.
+          ORA acts only at ≥4% expected value, with one call per cycle and three calls per day. Every
+          trade and every pass receives a Solana receipt, so restraint is auditable too.
         </p>
         <button
           onClick={() => setArmed((v) => {

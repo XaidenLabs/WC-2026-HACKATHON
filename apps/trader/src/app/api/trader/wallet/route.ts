@@ -4,7 +4,7 @@ import { getUserBets, balanceOf, markSettled, evaluateBet, STARTING_BALANCE } fr
 import { getScoresSnapshot } from "@/lib/txline/server";
 import { parseCurrentScore, type TxScoreEvent } from "@/lib/txline/types";
 
-// GET /api/trader/wallet — the signed-in user's paper wallet: balance + positions. Open bets on
+// GET /api/trader/wallet — the signed-in user's research wallet: saved sandbox reads. Open bets on
 // finished matches are settled against the real TxLINE result and paid out on read.
 
 async function authDid(req: Request): Promise<string | null> {

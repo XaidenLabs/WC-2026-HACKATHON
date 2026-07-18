@@ -87,10 +87,16 @@ export default function SweepstakeDetail() {
     }
   }
 
-  function copyLink() {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  async function shareGroup() {
+    const share = { title: `${data?.sweepstake.name ?? "Pulse"} Sweepstake`, text: "Join my World Cup sweepstake on Pulse", url: window.location.href };
+    try {
+      if (navigator.share) await navigator.share(share);
+      else await navigator.clipboard.writeText(share.url);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Share-sheet cancellation is not an error state.
+    }
   }
 
   if (loading) {
@@ -122,10 +128,10 @@ export default function SweepstakeDetail() {
         <div className="mt-2 flex items-center justify-between">
           <p className="font-mono text-xs tracking-wider text-text-dim">CODE: {code}</p>
           <button 
-            onClick={copyLink}
+            onClick={shareGroup}
             className="flex items-center gap-1.5 rounded bg-ink-2 px-2 py-1 text-xs text-text transition-colors hover:bg-ink-3"
           >
-            {copied ? <span className="text-signal">Copied!</span> : <><Copy className="size-3" /> Copy Link</>}
+            {copied ? <span className="text-signal">Ready to share</span> : <><Copy className="size-3" /> Invite friends</>}
           </button>
         </div>
       </div>
