@@ -5,7 +5,7 @@ import { parseCurrentScore } from "@/lib/txline/types";
 import { getAllSubscriptions } from "@/lib/pulse/push-store";
 
 // Global cache to track previous goal tallies across cron runs
-export const goalCache: Record<number, { p1: number; p2: number; finishedSummarySent?: boolean }> = globalThis.goalCache || {};
+export const goalCache: Record<number, { p1: number; p2: number; finishedSummarySent?: boolean; kickoffSent?: boolean }> = globalThis.goalCache || {};
 globalThis.goalCache = goalCache;
 
 const VAPID_PUBLIC = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
