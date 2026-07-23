@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
-    { "path": "/api/telegram/tick", "schedule": "* * * * *" },
-    { "path": "/api/pulse/push/cron", "schedule": "* * * * *" },
-    { "path": "/api/pulse/push/next-match", "schedule": "0 */6 * * *" }
+    { "path": "/api/telegram/tick", "schedule": "0 0 * * *" },
+    { "path": "/api/pulse/push/cron", "schedule": "0 0 * * *" },
+    { "path": "/api/pulse/push/next-match", "schedule": "0 0 * * *" }
   ]
 }
