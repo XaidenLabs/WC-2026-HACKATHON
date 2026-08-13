@@ -1,10 +1,27 @@
 @import "tailwindcss";
 
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --font-terminal-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-terminal-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --background: #f6f3fb;
+  --foreground: #21172f;
+  --ora-ink: #21172f;
+  --ora-muted: #756d82;
+  --ora-line: #ded7e8;
+  --ora-panel: rgba(255, 255, 255, 0.86);
+  --ora-lilac: #a98cf8;
+  --ora-purple: #8059e8;
+  --ora-pink: #f3a9ea;
+  --ora-mint: #c9f5da;
+  --ora-live: #169c67;
+  --font-terminal-sans: var(--font-outfit), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-terminal-mono: var(--font-ibm-plex-mono), "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 }
 
 @theme inline {
@@ -14,15 +31,501 @@
   --font-mono: var(--font-terminal-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-terminal-sans);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(128, 89, 232, 0.5);
+  outline-offset: 3px;
+}
+
+.landing-page {
+  background:
+    radial-gradient(circle at 86% 8%, rgba(255, 101, 15, 0.13), transparent 28rem),
+    linear-gradient(180deg, #0a0b09 0%, #0b0c0a 45%, #090a08 100%);
+}
+
+.landing-grain,
+.landing-terminal-grain {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.12'/%3E%3C/svg%3E");
+  mix-blend-mode: screen;
+  opacity: 0.028;
+}
+
+.landing-marquee-track {
+  animation: landing-marquee 26s linear infinite;
+}
+
+.landing-rise {
+  animation: landing-rise 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.landing-rise-delayed {
+  animation: landing-rise-preview 850ms 120ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.landing-terminal {
+  color-scheme: dark;
+}
+
+.landing-terminal a,
+.landing-terminal button {
+  border-radius: 5px;
+}
+
+@keyframes landing-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes landing-rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+}
+
+@keyframes landing-rise-preview {
+  from {
+    opacity: 0;
+    transform: translateX(1.875rem) scale(0.94);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .landing-marquee-track {
+    animation: none;
+    transform: none;
+  }
+
+  .landing-rise,
+  .landing-rise-delayed {
+    animation: none;
+  }
+}
+
+.ora-gradient {
+  background:
+    radial-gradient(circle at 18% 72%, rgba(242, 132, 235, 0.72), transparent 34%),
+    radial-gradient(circle at 80% 22%, rgba(205, 249, 220, 0.72), transparent 28%),
+    radial-gradient(circle at 83% 78%, rgba(121, 79, 229, 0.74), transparent 35%),
+    linear-gradient(145deg, #f2f3fa 8%, #f6e8f7 48%, #e3d8ff 100%);
+}
+
+.ora-grid-dots {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.55) 1.2px, transparent 1.2px);
+  background-size: 12px 12px;
+}
+
+.ora-surface {
+  border: 1px solid rgba(43, 31, 60, 0.1);
+  background: var(--ora-panel);
+  box-shadow: 0 24px 70px rgba(63, 42, 92, 0.12);
+  backdrop-filter: blur(18px);
+}
+
+.ora-card {
+  border: 1px solid var(--ora-line);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 32px rgba(55, 35, 78, 0.06);
+}
+
+.ora-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 8% 8%, rgba(211, 190, 255, 0.35), transparent 24rem),
+    radial-gradient(circle at 96% 4%, rgba(194, 245, 218, 0.32), transparent 22rem),
+    #f7f5fb;
+  color: var(--ora-ink);
+}
+
+/* Compatibility layer while the existing trading logic keeps its proven component structure. */
+.ora-page [class~="bg-[#0a0a0a]"],
+.ora-page [class~="bg-[#0d0d0d]"],
+.ora-page [class~="bg-black"] {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.ora-page h1[class~="text-white"],
+.ora-page h2[class~="text-white"],
+.ora-page h3[class~="text-white"],
+.ora-page [class~="bg-[#0a0a0a]"] [class~="text-white"],
+.ora-page [class~="bg-[#0d0d0d]"] [class~="text-white"],
+.ora-page [class~="bg-black"] [class~="text-white"],
+.ora-page [class~="bg-[#0a0a0a]"][class~="text-white"],
+.ora-page [class~="bg-[#0d0d0d]"][class~="text-white"] {
+  color: var(--ora-ink) !important;
+}
+
+.ora-page [class~="text-gray-200"],
+.ora-page [class~="text-gray-300"],
+.ora-page [class~="text-gray-400"] {
+  color: #50465f !important;
+}
+
+.ora-page [class~="text-gray-500"],
+.ora-page [class~="text-gray-600"] {
+  color: var(--ora-muted) !important;
+}
+
+.ora-page [class~="border-white/5"],
+.ora-page [class~="border-white/10"],
+.ora-page [class~="border-white/15"],
+.ora-page [class~="border-white/20"] {
+  border-color: var(--ora-line) !important;
+}
+
+.ora-page .hover\:text-white:hover {
+  color: var(--ora-ink) !important;
+}
+
+.ora-page .hover\:bg-white\/5:hover {
+  background-color: #f1ecf7 !important;
+}
+
+::selection {
+  background: rgba(169, 140, 248, 0.4);
+}
+
+/* Dashboard-specific tactical telemetry system. The marketing surface remains light. */
+.telemetry-dashboard {
+  --terminal-bg: #0a0b09;
+  --terminal-panel: #11120f;
+  --terminal-raised: #171816;
+  --terminal-line: #252721;
+  --terminal-text: #efefeb;
+  --terminal-muted: #72746d;
+  --terminal-orange: #ff650f;
+  --terminal-green: #4ee58a;
+  position: relative;
+  isolation: isolate;
+  background: var(--terminal-bg);
+  color: var(--terminal-text);
+  font-family: var(--font-terminal-sans);
+}
+
+.telemetry-dashboard::before {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  content: "";
+  background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0, 0, 0, 0.16) 4px);
+  opacity: 0.13;
+}
+
+.telemetry-dashboard button,
+.telemetry-dashboard a,
+.telemetry-dashboard input {
+  border-radius: 5px;
+}
+
+.telemetry-dashboard button:focus-visible,
+.telemetry-dashboard a:focus-visible,
+.telemetry-dashboard input:focus-visible {
+  outline-color: rgba(255, 101, 15, 0.75);
+}
+
+.telemetry-panel {
+  border: 1px solid var(--terminal-line);
+  border-radius: 10px;
+  background: var(--terminal-panel);
+  box-shadow: none;
+}
+
+.terminal-supervision {
+  color: var(--terminal-text);
+}
+
+.terminal-supervision [class*="rounded-"] {
+  border-radius: 5px !important;
+}
+
+.terminal-supervision [class*="text-[#21172f]"],
+.terminal-supervision [class*="text-[#50465f]"] {
+  color: var(--terminal-text) !important;
+}
+
+.terminal-supervision [class*="text-[#8059e8]"],
+.terminal-supervision [class*="text-[#6847c5]"] {
+  color: var(--terminal-orange) !important;
+}
+
+.terminal-supervision [class*="text-[#756d82]"],
+.terminal-supervision [class*="text-[#8a8295]"] {
+  color: var(--terminal-muted) !important;
+}
+
+.terminal-supervision [class*="bg-[#21172f]"] {
+  background: var(--terminal-orange) !important;
+  color: #0a0b09 !important;
+}
+
+.terminal-supervision [class*="bg-[#eee8ff]"],
+.terminal-supervision [class*="bg-[#f7f4fa]"],
+.terminal-supervision [class*="bg-[#faf8fc]"] {
+  background: #1a1510 !important;
+}
+
+.terminal-supervision [class*="bg-white"] {
+  background: var(--terminal-panel) !important;
+}
+
+.terminal-supervision [class*="border-[#d9d0e7]"],
+.terminal-supervision [class*="border-[#e6deed]"],
+.terminal-supervision [class*="border-[#eee8f3]"] {
+  border-color: var(--terminal-line) !important;
+}
+
+.terminal-supervision [class*="bg-[#fff8e9]"] {
+  background: #1a130d !important;
+}
+
+.terminal-supervision [class*="border-[#f0d7a8]"] {
+  border-color: #513019 !important;
+}
+
+.terminal-supervision [class*="text-[#8a6c38]"] {
+  color: #d58a4c !important;
+}
+
+.terminal-supervision input {
+  color: var(--terminal-text) !important;
+}
+
+.ora-calendar-terminal {
+  color: var(--terminal-text);
+}
+
+.ora-calendar-terminal [class*="rounded-"] {
+  border-radius: 5px !important;
+}
+
+.ora-calendar-terminal [class*="bg-white"] {
+  background: #131411 !important;
+}
+
+.ora-calendar-terminal [class*="bg-[#ede7ff]"],
+.ora-calendar-terminal [class*="bg-[#eee8ff]"] {
+  background: #25170e !important;
+}
+
+.ora-calendar-terminal [class*="bg-[#8059e8]"] {
+  background: var(--terminal-orange) !important;
+  color: #0a0b09 !important;
+}
+
+.ora-calendar-terminal [class*="bg-[#21172f]"] {
+  background: #20211e !important;
+}
+
+.ora-calendar-terminal [class*="text-[#21172f]"],
+.ora-calendar-terminal [class*="text-[#50465f]"] {
+  color: var(--terminal-text) !important;
+}
+
+.ora-calendar-terminal [class*="text-[#8059e8]"],
+.ora-calendar-terminal [class*="text-[#6f4fd1]"] {
+  color: var(--terminal-orange) !important;
+}
+
+.ora-calendar-terminal [class*="text-[#756d82]"],
+.ora-calendar-terminal [class*="text-[#8a8295]"],
+.ora-calendar-terminal [class*="text-[#9b94a3]"],
+.ora-calendar-terminal [class*="text-gray-500"],
+.ora-calendar-terminal [class*="text-gray-600"] {
+  color: var(--terminal-muted) !important;
+}
+
+.ora-calendar-terminal [class*="border-[#ded7e8]"],
+.ora-calendar-terminal [class*="border-[#d9d0e7]"],
+.ora-calendar-terminal [class*="border-[#e5dfe9]"],
+.ora-calendar-terminal [class*="border-[#eee9f1]"],
+.ora-calendar-terminal [class*="border-white/10"] {
+  border-color: var(--terminal-line) !important;
+}
+
+.ora-calendar-terminal [class*="shadow-"] {
+  box-shadow: none !important;
+}
+
+.ora-calendar-terminal .animate-pulse {
+  background: #1a1b18 !important;
+}
+
+.terminal-ledger [class*="rounded-"] {
+  border-radius: 5px !important;
+}
+
+.terminal-ledger [class*="bg-[#0d0d0d]"],
+.terminal-ledger [class*="bg-black"] {
+  background: #0f100e !important;
+}
+
+.terminal-ledger [class*="border-white/10"] {
+  border-color: var(--terminal-line) !important;
+}
+
+.strategy-scroll-column {
+  scrollbar-width: thin;
+  scrollbar-color: #3b3d36 transparent;
+  overscroll-behavior: contain;
+}
+
+.strategy-scroll-column::-webkit-scrollbar {
+  width: 6px;
+}
+
+.strategy-scroll-column::-webkit-scrollbar-thumb {
+  background: #3b3d36;
+}
+
+.terminal-workspace,
+.terminal-wallet {
+  color: var(--terminal-text);
+}
+
+.terminal-workspace [class*="rounded-"],
+.terminal-wallet [class*="rounded-"] {
+  border-radius: 5px !important;
+}
+
+.terminal-workspace [class~="bg-black"],
+.terminal-workspace [class~="bg-[#0a0a0a]"],
+.terminal-workspace [class~="bg-[#0d0d0d]"] {
+  background: var(--terminal-panel) !important;
+}
+
+.terminal-workspace [class*="border-white/5"],
+.terminal-workspace [class*="border-white/10"],
+.terminal-workspace [class*="border-white/15"] {
+  border-color: var(--terminal-line) !important;
+}
+
+.terminal-workspace button[class*="bg-emerald-500"],
+.terminal-workspace a[class*="bg-emerald-500"],
+.terminal-workspace button[class*="bg-sky-500"],
+.terminal-workspace button[class*="bg-white"] {
+  background: var(--terminal-orange) !important;
+  color: var(--terminal-bg) !important;
+}
+
+.terminal-workspace [class*="text-sky-400"] {
+  color: var(--terminal-orange) !important;
+}
+
+.terminal-workspace [class*="border-sky-500"] {
+  border-color: #8a3e13 !important;
+}
+
+.terminal-workspace [class*="bg-sky-500"] {
+  background: #25170e !important;
+}
+
+.terminal-wallet .ora-card,
+.terminal-wallet [class*="bg-white"],
+.terminal-wallet [class*="bg-[#fbfaff]"],
+.terminal-wallet [class*="bg-[#faf8fb]"],
+.terminal-wallet [class*="bg-[#f8f5fb]"],
+.terminal-wallet [class*="bg-[#f7f3fb]"],
+.terminal-wallet [class*="bg-[#f1ecf8]"] {
+  background: var(--terminal-panel) !important;
+  box-shadow: none !important;
+}
+
+.terminal-wallet .ora-card,
+.terminal-wallet [class*="border-[#ddd5e7]"],
+.terminal-wallet [class*="border-[#ded6e8]"],
+.terminal-wallet [class*="border-[#ded5ea]"],
+.terminal-wallet [class*="border-[#d9d0e7]"],
+.terminal-wallet [class*="border-[#e7e1ed]"],
+.terminal-wallet [class*="border-[#ebe5f0]"],
+.terminal-wallet [class*="border-[#ebe6ef]"] {
+  border-color: var(--terminal-line) !important;
+}
+
+.terminal-wallet [class*="text-[#21172f]"],
+.terminal-wallet [class*="text-[#50465f]"],
+.terminal-wallet [class*="text-[#5e536d]"],
+.terminal-wallet [class*="text-[#5f536e]"] {
+  color: var(--terminal-text) !important;
+}
+
+.terminal-wallet [class*="text-[#675e72]"],
+.terminal-wallet [class*="text-[#756d82]"],
+.terminal-wallet [class*="text-[#8a8295]"],
+.terminal-wallet [class*="text-[#9a93a2]"] {
+  color: var(--terminal-muted) !important;
+}
+
+.terminal-wallet [class*="text-[#8059e8]"],
+.terminal-wallet [class*="text-[#bda9ff]"] {
+  color: var(--terminal-orange) !important;
+}
+
+.terminal-wallet [class*="bg-[#21172f]"] {
+  background: #1a130d !important;
+}
+
+.terminal-wallet [class*="bg-[#eee8ff]"],
+.terminal-wallet [class*="bg-amber-50"] {
+  background: #25170e !important;
+}
+
+.terminal-wallet [class*="text-amber-600"] {
+  color: var(--terminal-orange) !important;
+}
+
+.terminal-wallet [class*="bg-[#fff8e9]"] {
+  background: #17110d !important;
+}
+
+.terminal-wallet [class*="bg-emerald-50"] {
+  background: #0d1711 !important;
+}
+
+.terminal-wallet [class*="border-emerald-200"] {
+  border-color: #1f4a35 !important;
+}
+
+.terminal-wallet [class*="border-[#f0d7a8]"] {
+  border-color: #4b2b17 !important;
+}
+
+.terminal-wallet [class*="text-[#6b4b16]"],
+.terminal-wallet [class*="text-[#8a6c38]"] {
+  color: #d59058 !important;
+}
+
+.terminal-wallet input {
+  color: var(--terminal-text) !important;
+}
+
+@media (max-width: 1023px) {
+  .telemetry-dashboard::before {
+    opacity: 0.08;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .telemetry-dashboard *,
+  .telemetry-dashboard *::before,
+  .telemetry-dashboard *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

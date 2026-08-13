@@ -3,6 +3,8 @@
 
 export type Selection = "home" | "draw" | "away";
 export type Side = "back" | "lay";
+export type StrategyMarket = "1X2" | "GOALS" | "BTTS";
+export type MarketSelection = "over" | "under" | "yes" | "no";
 
 export type TriggerType =
   | "prob_below" // selection implied prob < value(%)  → underdog / value backing
@@ -13,8 +15,10 @@ export type TriggerType =
 
 export type StrategySpec = {
   name: string;
-  market: "1X2";
+  market: StrategyMarket;
   selection: Selection;
+  marketSelection?: MarketSelection;
+  line?: 1.5 | 2.5 | 3.5 | 4.5;
   side: Side;
   trigger: { type: TriggerType; value: number; windowMin?: number };
   stake: number; // units per bet
