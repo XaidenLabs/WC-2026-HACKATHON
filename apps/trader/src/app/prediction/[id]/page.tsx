@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import useSWR from "swr";
 import { ArrowLeft, ShieldCheck, Share2, Check, TrendingUp, ExternalLink, Loader2, Lock, Copy } from "lucide-react";
-import Header from "@/components/Header";
+import TraderShell from "@/components/TraderShell";
 import { cn, fetcher } from "@/lib/ui";
 import { payoutOn } from "@/lib/ora/pick";
 import { useBackBet } from "@/hooks/useBackBet";
@@ -35,10 +35,9 @@ export default function PredictionPage() {
   const live = data?.live;
 
   return (
-    <div className="min-h-screen bg-[#050505] font-mono text-gray-300">
-      <Header tagline="verifiable prediction" />
-      <div className="mx-auto w-full max-w-lg px-4 py-8">
-        <Link href="/portfolio" className="mb-4 inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-white">
+    <TraderShell title="Prediction receipt" subtitle="Verifiable position details and live settlement state.">
+      <div className="terminal-workspace mx-auto w-full max-w-xl font-mono">
+        <Link href="/portfolio" className="mb-4 inline-flex items-center gap-1.5 text-sm text-[#686a64] hover:text-[#efefeb]">
           <ArrowLeft className="size-4" /> My predictions
         </Link>
 
@@ -57,7 +56,7 @@ export default function PredictionPage() {
         {bet && <Receipt bet={bet} live={live} onShare={share} copied={copied} />}
         {bet && <CopyPrediction bet={bet} live={live} />}
       </div>
-    </div>
+    </TraderShell>
   );
 }
 

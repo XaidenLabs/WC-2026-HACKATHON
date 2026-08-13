@@ -44,8 +44,10 @@ export function useTraderWallet() {
   return {
     ready,
     authenticated,
+    user,
     login,
     logout,
+    userId: user?.id ?? null,
     email: user?.email?.address ?? null,
     getAccessToken,
     wallet: data?.ok ? data : null,
