@@ -15,6 +15,13 @@ export type AgentCall = {
   fixtureId?: number;
 };
 
+export type AgentPass = {
+  strategy: string;
+  match: string;
+  reason: string;
+  fixtureId: number;
+};
+
 const SEL_UP: Record<Selection, string> = { home: "HOME", draw: "DRAW", away: "AWAY" };
 const SEL_FROM: Record<string, Selection> = { HOME: "home", DRAW: "draw", AWAY: "away" };
 
@@ -26,6 +33,22 @@ export function formatCall(c: AgentCall): string {
 /** A refusal is as auditable as a trade: ORA publishes why capital stayed idle. */
 export function formatPass(input: { match: string; fixtureId: number; reason: string }): string {
   return `TxAGENT PASS | Risk Mandate | ${input.match} | ${input.reason} | FX#${input.fixtureId}`;
+}
+
+/** Parse an auditable ORA refusal from its Solana memo representation. */
+export function parsePass(raw: string): AgentPass | null {
+  const text = raw.replace(/^\[\d+\]\s*/, "");
+  if (!text.startsWith("TxAGENT PASS |")) return null;
+  const parts = text.split(" | ");
+  if (parts.length < 5) return null;
+  const fixture = parts[parts.length - 1]?.match(/^FX#(\d+)$/);
+  if (!fixture) return null;
+  return {
+    strategy: parts[1].trim(),
+    match: parts[2].trim(),
+    reason: parts.slice(3, -1).join(" | ").trim(),
+    fixtureId: Number(fixture[1]),
+  };
 }
 
 export function parseCall(raw: string): AgentCall | null {

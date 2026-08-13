@@ -2,8 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     {
-      "path": "/api/agent/autopilot",
-      "schedule": "0 0 * * *"
+      "path": "/api/cron/supervised-execution",
+      "schedule": "* * * * *"
     },
     {
       "path": "/api/telegram/tick",
