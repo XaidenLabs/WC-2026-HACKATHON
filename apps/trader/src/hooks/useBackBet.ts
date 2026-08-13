@@ -4,10 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTraderWallet } from "@/hooks/useTraderWallet";
 
-type Sel = "home" | "draw" | "away" | "over" | "under";
+type Sel = "home" | "draw" | "away" | "over" | "under" | "yes" | "no";
 
 /**
- * One-tap "back this pick": gates on sign-in, creates a TxLINE-priced position, then routes to the
+ * One-tap "back this pick": gates on sign-in, creates a fresh Sportmonks-priced position, then routes to the
  * bet's own prediction receipt. Powers the home feed and the match desk's ORA-pick button.
  */
 export function useBackBet() {
@@ -16,7 +16,7 @@ export function useBackBet() {
   const [pendingId, setPendingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function back(input: { fixtureId: number; match: string; selection: Sel; odds: number; stake?: number; market?: "1x2" | "goals_ou"; line?: number }) {
+  async function back(input: { fixtureId: number; match: string; selection: Sel; odds: number; stake?: number; market?: "1x2" | "goals_ou" | "btts"; line?: number }) {
     if (!authenticated) { login(); return; }
     setPendingId(input.fixtureId);
     setError(null);
