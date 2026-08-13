@@ -1,11 +1,12 @@
 <div align="center">
 
-# 🟠 TxAgent Desk: back the AI, or build your own
+# 🟠 TXAgent
 
 ### Back the AI. Win if it's right.
 
-The *power-user* face of the [WHISTL monorepo](../../README.md): a trading terminal for the
-World Cup. In one tap you back ORA's on-chain picks; in one paragraph of plain English you
+**TXAgent is the application. ORA is its autonomous football intelligence engine.**
+
+The football-market product in the [WHISTL monorepo](../../README.md). In one tap you back ORA's on-chain picks; in one paragraph of plain English you
 compile, backtest, and deploy your **own** trading agent against real TxLINE odds. Every call
 is inscribed on Solana and settled by a TxLINE proof: no black box, no admin.
 
@@ -28,6 +29,12 @@ is inscribed on Solana and settled by a TxLINE proof: no black box, no admin.
 
 ## 🧭 What this app is
 
+The product hierarchy is defined in [PRODUCT_IDENTITY.md](PRODUCT_IDENTITY.md). Application
+copy leads with TXAgent. ORA names the intelligence engine and its decisions.
+
+The launch scope is **football only**. The expansion rule and commercial gate are defined in
+[MARKET_SCOPE.md](MARKET_SCOPE.md).
+
 Two products in one desk, sharing the same settlement rails as the protocol:
 
 **① Follow mode: back the AI.**
@@ -37,6 +44,7 @@ Two products in one desk, sharing the same settlement rails as the protocol:
 | `/markets` · `/market/[id]` | Live WC markets with odds charts (lightweight-charts) |
 | `/prediction/[id]` | ORA's pick for a fixture, inscribed on-chain, one-tap **Back** |
 | `/portfolio` | Your open positions + settled P&L |
+| `/wallet` | Embedded Solana devnet wallet, verified test-USDC balance, funding receipts and ORA allocation boundary |
 
 **② Build mode: deploy your own agent.**
 
@@ -73,6 +81,7 @@ Two products in one desk, sharing the same settlement rails as the protocol:
 |---|---|
 | [src/lib/agent](src/lib/agent) | Strategy compiler, backtester, autopilot engine |
 | [src/lib/trader](src/lib/trader) | Markets, predictions, bet + wallet logic |
+| [src/lib/wallet](src/lib/wallet) | Devnet wallet validation, transaction review rules, RPC reads and faucet safety |
 | [src/lib/ora](src/lib/ora) | ORA picks (shared reasoning brain) |
 | [src/lib/txline](src/lib/txline) | TxLINE odds/scores client (proxied via `/api/txline/*`) |
 | [src/app/api/agent](src/app/api/agent) | `compile` · `backtest` · `deploy` · `autopilot` · `ledger` · `chart` |
@@ -97,7 +106,7 @@ same Supabase, same on-chain program. Full env table lives in the
 
 <div align="center">
 
-**TxAgent Desk** · *back the AI, or become one.*
+**TXAgent** · *football intelligence with ORA built in.*
 
 Part of the [WHISTL monorepo](../../README.md) · [Protocol](../whistl) · [Pulse](../pulse)
 

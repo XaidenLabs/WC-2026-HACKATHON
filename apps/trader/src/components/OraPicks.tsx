@@ -4,12 +4,17 @@ import Link from "next/link";
 import useSWR from "swr";
 import { Brain, Loader2, ArrowRight, Lock, Check } from "lucide-react";
 import { cn, fetcher, kickoff } from "@/lib/ui";
-import { payoutOn, type OraPick, type Sel } from "@/lib/ora/pick";
+import { payoutOn } from "@/lib/ora/pick";
+import type { OraForecast, OraOpportunity } from "@/lib/ora/engine-domain";
+import type { SupervisedMarket, SupervisedSelection } from "@/lib/supervision/domain";
 import { useBackBet } from "@/hooks/useBackBet";
 
 type Pick = {
   fixtureId: number; p1: string; p2: string; competition: string; startTime: number;
-  phase: "upcoming" | "live"; pick: OraPick & { team: string };
+  phase: "upcoming" | "live";
+  forecast: OraForecast;
+  alternatives: OraForecast[];
+  trade: OraOpportunity | null;
 };
 
 /** ORA's live AI predictions, each backable in one tap. `stake` sets the amount shown/placed. */
@@ -20,7 +25,7 @@ export default function OraPicks({ limit, stake = 50 }: { limit?: number; stake?
   );
   const { back, pendingId, authenticated, error: betError } = useBackBet();
   const picks = (data?.picks ?? []).slice(0, limit ?? 20);
-  // Only show the error when there's nothing to display — transient TxLINE blips keep the list.
+  // Only show the error when there is nothing to display. Transient provider blips keep the list.
   const feedError = (Boolean(error) || data?.ok === false) && picks.length === 0;
 
   return (
@@ -32,7 +37,7 @@ export default function OraPicks({ limit, stake = 50 }: { limit?: number; stake?
       )}
       {feedError && picks.length === 0 && (
         <p className="rounded-xl border border-white/10 bg-[#0a0a0a] p-6 text-center text-sm text-yellow-500/80">
-          Picks unavailable · TxLINE feed may need refreshing.
+          Picks unavailable. The football feed may need reconnecting.
         </p>
       )}
       {data && !feedError && picks.length === 0 && (
@@ -53,17 +58,19 @@ function PickCard({
 }: {
   p: Pick;
   stake: number;
-  onBack: (i: { fixtureId: number; match: string; selection: Sel; odds: number; stake: number }) => void;
+  onBack: (i: { fixtureId: number; match: string; selection: SupervisedSelection; odds: number; stake: number; market: SupervisedMarket; line?: number }) => void;
   pending: boolean;
   authed: boolean;
 }) {
-  const payout = payoutOn(stake, p.pick.dec);
-  const val = p.pick.value;
+  const trade = p.trade;
+  const forecast = p.forecast;
+  const val = Boolean(trade?.pick.value);
   const tierColor =
-    p.pick.tier === "strong" ? "text-emerald-400"
-      : p.pick.tier === "value" ? "text-emerald-400"
-      : p.pick.tier === "slim" ? "text-sky-400" : "text-gray-500";
-  const edgeStr = `${p.pick.edge >= 0 ? "+" : ""}${p.pick.edge}pp edge · EV ${p.pick.evPct >= 0 ? "+" : ""}${p.pick.evPct}%`;
+    trade?.pick.tier === "strong" ? "text-emerald-400"
+      : trade?.pick.tier === "value" ? "text-emerald-400"
+      : trade?.pick.tier === "slim" ? "text-sky-400" : "text-gray-500";
+  const edgeStr = trade ? `${trade.pick.edge >= 0 ? "+" : ""}${trade.pick.edge}pp edge · EV ${trade.pick.evPct >= 0 ? "+" : ""}${trade.pick.evPct}%` : "";
+  const payout = trade ? payoutOn(stake, trade.pick.dec) : null;
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-white/10 bg-[#0a0a0a] p-4 transition-colors hover:border-white/20 sm:flex-row sm:items-center sm:justify-between">
@@ -79,15 +86,31 @@ function PickCard({
           {p.p1} <span className="text-gray-600">v</span> {p.p2}
         </Link>
         <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[13px]">
-          <span className={cn("flex items-center gap-1 font-medium", val ? "text-emerald-400" : "text-gray-400")}>
-            <Brain className="size-3.5" /> {val ? `ORA backs ${p.pick.team}` : "ORA passes"}
+          <span className="flex items-center gap-1 font-medium text-white">
+            <Brain className="size-3.5 text-orange-500" /> Best forecast: {forecast.selectionLabel}
           </span>
-          <span className={cn("rounded bg-white/5 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider", tierColor)}>
-            {p.pick.confidence}
+          <span className="rounded bg-white/5 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-orange-400">
+            {forecast.probabilityPct}% model
           </span>
-          {val && <span className="text-gray-500">{p.pick.prob}% model · {edgeStr}</span>}
+          <span className="rounded bg-white/5 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-gray-400">{forecast.marketLabel}</span>
+          <span className="text-gray-500">{forecast.status === "priced" ? "price available" : "forecast only"}</span>
         </p>
-        <p className="mt-1 text-[11px] italic leading-snug text-gray-500">{p.pick.reasoning}</p>
+        <p className="mt-1 text-[11px] leading-snug text-gray-500">{forecast.reasoning}</p>
+        {p.alternatives.length > 0 && (
+          <p className="mt-1.5 flex flex-wrap gap-1.5 text-[10px] text-gray-500">
+            <span>Other model angles:</span>
+            {p.alternatives.map((alternative) => (
+              <span key={`${alternative.market}:${alternative.line ?? "na"}`} className="rounded border border-white/10 px-1.5 py-0.5">
+                {alternative.selectionLabel} {alternative.probabilityPct}%
+              </span>
+            ))}
+          </p>
+        )}
+        {trade && (
+          <p className="mt-1 text-[11px] text-emerald-400">
+            Trade-qualified: {trade.selectionLabel} at {trade.pick.dec.toFixed(2)}× · {edgeStr}
+          </p>
+        )}
       </div>
 
       {/* One-tap back, or a disciplined pass */}
@@ -97,7 +120,7 @@ function PickCard({
         </Link>
         {val ? (
           <button
-            onClick={() => onBack({ fixtureId: p.fixtureId, match: `${p.p1} v ${p.p2}`, selection: p.pick.selection, odds: p.pick.dec, stake })}
+            onClick={() => trade && onBack({ fixtureId: p.fixtureId, match: `${p.p1} v ${p.p2}`, selection: trade.pick.selection, odds: trade.pick.dec, stake, market: trade.market, ...(trade.line != null ? { line: trade.line } : {}) })}
             disabled={pending}
             className="flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-bold text-black transition-colors hover:bg-emerald-400 disabled:opacity-60">
             {pending ? <><Loader2 className="size-4 animate-spin" /> Backing…</>
@@ -105,7 +128,9 @@ function PickCard({
               : <><Check className="size-4" /> Back {stake} → win {payout}</>}
           </button>
         ) : (
-          <span className="rounded-lg border border-white/10 px-4 py-2.5 text-xs font-medium text-gray-500">No value · standing aside</span>
+          <span className={cn("rounded-lg border border-white/10 px-4 py-2.5 text-xs font-medium", tierColor)}>
+            Forecast only · no qualified edge
+          </span>
         )}
       </div>
     </div>
