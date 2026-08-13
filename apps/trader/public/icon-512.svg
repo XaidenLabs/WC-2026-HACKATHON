@@ -1,5 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#111111"/>
-  <text x="256" y="340" font-family="monospace" font-size="256" font-weight="700" text-anchor="middle" fill="#c0f400">W</text>
-  <circle cx="420" cy="100" r="28" fill="#c0f400"/>
+  <rect width="512" height="512" rx="118" fill="#21172f"/>
+  <circle cx="256" cy="256" r="188" fill="#bda9ff"/>
+  <text x="256" y="310" font-family="Arial, sans-serif" font-size="156" font-weight="800" text-anchor="middle" fill="#21172f">TX</text>
+  <circle cx="404" cy="112" r="24" fill="#c9f5da"/>
 </svg>

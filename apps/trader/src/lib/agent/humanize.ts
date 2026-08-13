@@ -41,7 +41,15 @@ export function conditionText(spec: StrategySpec): string {
   }
 }
 
+export function marketText(spec: StrategySpec): string {
+  if (spec.market === "GOALS") return `Total goals, ${spec.marketSelection === "under" ? "Under" : "Over"} ${spec.line ?? 2.5}`;
+  if (spec.market === "BTTS") return `Both teams to score, ${spec.marketSelection === "no" ? "No" : "Yes"}`;
+  return "Full-time result";
+}
+
 /** Plain-English "what to do". */
 export function actionText(spec: StrategySpec): string {
+  if (spec.market === "GOALS") return `Choose ${spec.marketSelection === "under" ? "Under" : "Over"} ${spec.line ?? 2.5} total goals`;
+  if (spec.market === "BTTS") return `Choose Both Teams to Score, ${spec.marketSelection === "no" ? "No" : "Yes"}`;
   return `${sideVerb(spec.side)} ${selectionLabel(spec.selection)}`;
 }

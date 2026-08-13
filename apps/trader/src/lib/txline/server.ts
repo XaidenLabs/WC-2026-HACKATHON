@@ -10,6 +10,8 @@ import type { TxFixture, StatValidation } from "./types";
 
 // Devnet API host (confirmed by TxODDS). `txline.txodds.com` routes to mainnet.
 const BASE = "https://txline-dev.txodds.com";
+const REQUEST_TIMEOUT_MS = 10_000;
+const MAX_GET_ATTEMPTS = 3;
 
 /** Raised when TXLINE_API_TOKEN is not configured — routes turn this into a 503. */
 export class TxlineTokenMissing extends Error {
@@ -23,7 +25,11 @@ export class TxlineTokenMissing extends Error {
 let jwtCache: { token: string; at: number } | null = null;
 async function getJwt(): Promise<string> {
   if (jwtCache && Date.now() - jwtCache.at < 60 * 60 * 1000) return jwtCache.token;
-  const res = await fetch(`${BASE}/auth/guest/start`, { method: "POST", cache: "no-store" });
+  const res = await fetch(`${BASE}/auth/guest/start`, {
+    method: "POST",
+    cache: "no-store",
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
   if (!res.ok) throw new Error(`POST /auth/guest/start -> ${res.status}`);
   const json = (await res.json()) as { token?: string };
   if (!json.token) throw new Error("guest/start returned no token");
@@ -34,16 +40,30 @@ async function getJwt(): Promise<string> {
 async function txGet<T>(path: string): Promise<T> {
   const apiToken = process.env.TXLINE_API_TOKEN;
   if (!apiToken) throw new TxlineTokenMissing();
-  const jwt = await getJwt();
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { Authorization: `Bearer ${jwt}`, "X-Api-Token": apiToken },
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    const body = (await res.text()).slice(0, 200);
-    throw new Error(`GET ${path} -> ${res.status}: ${body}`);
+  let lastError = "TXLINE_REQUEST_FAILED";
+  for (let attempt = 0; attempt < MAX_GET_ATTEMPTS; attempt += 1) {
+    try {
+      const jwt = await getJwt();
+      const res = await fetch(`${BASE}${path}`, {
+        headers: { Authorization: `Bearer ${jwt}`, "X-Api-Token": apiToken },
+        cache: "no-store",
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+      if (res.ok) return (await res.json()) as T;
+      const body = (await res.text()).slice(0, 200);
+      lastError = `GET ${path} -> ${res.status}: ${body}`;
+      if (res.status === 401) jwtCache = null;
+      if (res.status !== 401 && res.status !== 429 && res.status < 500) break;
+    } catch (error) {
+      lastError = error instanceof Error && error.name === "TimeoutError"
+        ? `GET ${path} -> timeout`
+        : `GET ${path} -> ${(error as Error).message}`;
+    }
+    if (attempt + 1 < MAX_GET_ATTEMPTS) {
+      await new Promise((resolve) => setTimeout(resolve, 250 * 2 ** attempt));
+    }
   }
-  return (await res.json()) as T;
+  throw new Error(lastError);
 }
 
 /** GET /api/fixtures/snapshot — all upcoming/recent fixtures.
