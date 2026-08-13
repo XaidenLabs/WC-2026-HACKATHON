@@ -8,8 +8,8 @@ import { supabaseAdmin, supabaseConfigured } from "@/lib/supabase/server";
 
 export const STARTING_BALANCE = 1000;
 
-export type Market = "1x2" | "goals_ou";
-export type Selection = "home" | "draw" | "away" | "over" | "under";
+export type Market = "1x2" | "goals_ou" | "btts";
+export type Selection = "home" | "draw" | "away" | "over" | "under" | "yes" | "no";
 export type BetStatus = "open" | "won" | "lost";
 
 export type Bet = {
@@ -24,14 +24,21 @@ export type Bet = {
   stake: number;
   status: BetStatus;
   pnl: number | null;
+  proposal_id?: string | null;
+  execution_ref?: string | null;
+  source?: "txline" | "sportmonks" | "replay" | "devnet";
   created_at: string;
 };
 
-/** Decide a settled bet's outcome from the real final score. Handles 1X2 and goals O/U. */
+/** Decide a settled bet's outcome from the real final score. Handles 1X2, totals, and BTTS. */
 export function evaluateBet(bet: Pick<Bet, "market" | "line" | "selection">, p1Goals: number, p2Goals: number): "won" | "lost" {
   if (bet.market === "goals_ou" && bet.line != null) {
     const over = p1Goals + p2Goals > bet.line;
     return (bet.selection === "over" ? over : !over) ? "won" : "lost";
+  }
+  if (bet.market === "btts") {
+    const bothScored = p1Goals > 0 && p2Goals > 0;
+    return (bet.selection === "yes" ? bothScored : !bothScored) ? "won" : "lost";
   }
   const result = p1Goals > p2Goals ? "home" : p2Goals > p1Goals ? "away" : "draw";
   return result === bet.selection ? "won" : "lost";
@@ -83,6 +90,7 @@ export async function placeBet(
   if (!(stake > 0)) return { ok: false, error: "Stake must be positive" };
   if (!(odds > 1)) return { ok: false, error: "Invalid odds" };
   if (market === "goals_ou" && line == null) return { ok: false, error: "Missing goals line" };
+  if (market === "btts" && !["yes", "no"].includes(selection)) return { ok: false, error: "Invalid BTTS selection" };
 
   const bets = await getUserBets(userDid);
   const bal = balanceOf(bets);
@@ -128,4 +136,124 @@ export async function placeBet(
 export async function markSettled(betId: string, status: "won" | "lost", pnl: number): Promise<void> {
   await requireBackend();
   await supabaseAdmin().from("trader_bets").update({ status, pnl }).eq("id", betId);
+}
+
+/**
+ * Records an idempotent replay execution. This is intentionally separate from live TxLINE
+ * execution and is always labelled `replay` in storage and in the user receipt.
+ */
+export async function placeReplayBet(
+  userDid: string,
+  proposalId: string,
+  input: { fixtureId: number; match: string; selection: Selection; odds: number; stake: number; market: Market; line: number | null },
+): Promise<{ ok: true; bet: Bet } | { ok: false; error: string }> {
+  await requireBackend();
+  const existing = await supabaseAdmin().from("trader_bets").select("*").eq("proposal_id", proposalId).maybeSingle();
+  if (existing.error) return { ok: false, error: existing.error.message };
+  if (existing.data) return { ok: true, bet: existing.data as Bet };
+
+  if (!(input.stake > 0) || !(input.odds > 1)) return { ok: false, error: "Invalid replay order" };
+  const bets = await getUserBets(userDid);
+  const balance = balanceOf(bets);
+  if (input.stake > balance) return { ok: false, error: `Not enough sandbox balance. Available: ${balance} test USDC` };
+
+  const bet: Bet = {
+    id: randomUUID(),
+    user_did: userDid,
+    fixture_id: input.fixtureId,
+    match: input.match,
+    market: input.market,
+    line: input.line,
+    selection: input.selection,
+    odds: Math.round(input.odds * 1000) / 1000,
+    stake: Math.round(input.stake * 100) / 100,
+    status: "open",
+    pnl: null,
+    proposal_id: proposalId,
+    execution_ref: `replay:${proposalId}`,
+    source: "replay",
+    created_at: new Date().toISOString(),
+  };
+  const { data, error } = await supabaseAdmin().from("trader_bets").insert({
+    id: bet.id,
+    user_did: bet.user_did,
+    fixture_id: bet.fixture_id,
+    match: bet.match,
+    market: bet.market,
+    line: bet.line,
+    selection: bet.selection,
+    odds: bet.odds,
+    stake: bet.stake,
+    status: bet.status,
+    proposal_id: proposalId,
+    execution_ref: bet.execution_ref,
+    source: "replay",
+  }).select("*").single();
+  if (error?.code === "23505") {
+    const retry = await supabaseAdmin().from("trader_bets").select("*").eq("proposal_id", proposalId).single();
+    if (retry.error) return { ok: false, error: retry.error.message };
+    return { ok: true, bet: retry.data as Bet };
+  }
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, bet: data as Bet };
+}
+
+/**
+ * Records an idempotent ORA execution priced from a fresh Sportmonks snapshot. This remains a
+ * devnet testing position until the escrow program's trade instruction is wired end to end.
+ */
+export async function placeSupervisedBet(
+  userDid: string,
+  proposalId: string,
+  input: { fixtureId: number; match: string; selection: Selection; odds: number; stake: number; market: Market; line: number | null },
+): Promise<{ ok: true; bet: Bet } | { ok: false; error: string }> {
+  await requireBackend();
+  const existing = await supabaseAdmin().from("trader_bets").select("*").eq("proposal_id", proposalId).maybeSingle();
+  if (existing.error) return { ok: false, error: existing.error.message };
+  if (existing.data) return { ok: true, bet: existing.data as Bet };
+  if (!(input.stake > 0) || !(input.odds > 1)) return { ok: false, error: "INVALID_SUPERVISED_ORDER" };
+
+  const bets = await getUserBets(userDid);
+  const balance = balanceOf(bets);
+  if (input.stake > balance) return { ok: false, error: `Not enough sandbox balance. Available: ${balance} test USDC` };
+
+  const bet: Bet = {
+    id: randomUUID(),
+    user_did: userDid,
+    fixture_id: input.fixtureId,
+    match: input.match,
+    market: input.market,
+    line: input.line,
+    selection: input.selection,
+    odds: Math.round(input.odds * 1000) / 1000,
+    stake: Math.round(input.stake * 100) / 100,
+    status: "open",
+    pnl: null,
+    proposal_id: proposalId,
+    execution_ref: `sportmonks-sandbox:${proposalId}`,
+    source: "sportmonks",
+    created_at: new Date().toISOString(),
+  };
+  const { data, error } = await supabaseAdmin().from("trader_bets").insert({
+    id: bet.id,
+    user_did: bet.user_did,
+    fixture_id: bet.fixture_id,
+    match: bet.match,
+    market: bet.market,
+    line: bet.line,
+    selection: bet.selection,
+    odds: bet.odds,
+    stake: bet.stake,
+    status: bet.status,
+    proposal_id: proposalId,
+    execution_ref: bet.execution_ref,
+    source: bet.source,
+  }).select("*").single();
+  if (error?.code === "23505") {
+    const retry = await supabaseAdmin().from("trader_bets").select("*").eq("proposal_id", proposalId).single();
+    if (retry.error) return { ok: false, error: retry.error.message };
+    return { ok: true, bet: retry.data as Bet };
+  }
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, bet: data as Bet };
 }
