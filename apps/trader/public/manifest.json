@@ -1,11 +1,11 @@
 {
-  "name": "TxAgent — verifiable AI sports trading",
-  "short_name": "TxAgent",
-  "description": "Describe your edge in plain English, backtest it on real World Cup data, and let a verifiable on-chain AI trade it. Sign in for a free paper-trading wallet.",
+  "name": "TXAgent | Football intelligence with ORA",
+  "short_name": "TXAgent",
+  "description": "TXAgent is a football intelligence application where the ORA engine scans live markets, calls or passes on value, and publishes a verifiable decision record.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#050505",
-  "theme_color": "#10b981",
+  "background_color": "#f6f3fb",
+  "theme_color": "#a98cf8",
   "orientation": "portrait-primary",
   "categories": ["finance", "sports"],
   "icons": [
