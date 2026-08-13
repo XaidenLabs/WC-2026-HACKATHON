@@ -17,25 +17,25 @@ export default function MatchChart({ candles }: { candles: Candle[] }) {
     if (!containerRef.current) return;
     const chart = createChart(containerRef.current, {
       layout: {
-        background: { type: ColorType.Solid, color: "#0a0a0a" },
-        textColor: "#6b7280",
+        background: { type: ColorType.Solid, color: "#ffffff" },
+        textColor: "#756d82",
         fontFamily: "monospace",
         fontSize: 10,
       },
       grid: {
-        vertLines: { color: "rgba(255,255,255,0.04)" },
-        horzLines: { color: "rgba(255,255,255,0.04)" },
+        vertLines: { color: "rgba(82,62,105,0.06)" },
+        horzLines: { color: "rgba(82,62,105,0.06)" },
       },
-      timeScale: { timeVisible: true, secondsVisible: false, borderColor: "rgba(255,255,255,0.1)" },
-      rightPriceScale: { borderColor: "rgba(255,255,255,0.1)" },
+      timeScale: { timeVisible: true, secondsVisible: false, borderColor: "rgba(82,62,105,0.12)" },
+      rightPriceScale: { borderColor: "rgba(82,62,105,0.12)" },
       crosshair: { mode: 0 },
       autoSize: true,
     });
     const series = chart.addSeries(CandlestickSeries, {
-      upColor: "#10b981",
+      upColor: "#8059e8",
       downColor: "#f43f5e",
       borderVisible: false,
-      wickUpColor: "#10b981",
+      wickUpColor: "#8059e8",
       wickDownColor: "#f43f5e",
       priceFormat: { type: "custom", formatter: (p: number) => `${p.toFixed(1)}%` },
     });

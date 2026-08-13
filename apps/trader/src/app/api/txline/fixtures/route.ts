@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getFixtures, TxlineTokenMissing } from "@/lib/txline/server";
+import { isFootballScope, MARKET_SCOPE } from "@/lib/product/scope";
 import type { TxScoreEvent } from "@/lib/txline/types";
 
 // Live fixtures proxy. Holds the TxLINE token server-side; the browser calls this.
@@ -8,6 +9,18 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const startEpochDay = searchParams.get("startEpochDay");
   const competitionId = searchParams.get("competitionId");
+  const sport = searchParams.get("sport");
+
+  if (!isFootballScope(sport)) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "FOOTBALL_ONLY",
+        message: "ORA currently supports football fixtures only.",
+      },
+      { status: 400 },
+    );
+  }
 
   try {
     const { getScoresSnapshot } = await import("@/lib/txline/server");
@@ -29,7 +42,12 @@ export async function GET(request: Request) {
       }
     }));
     
-    return NextResponse.json({ ok: true, source: "live", fixtures: fixturesWithScores });
+    return NextResponse.json({
+      ok: true,
+      source: "live",
+      sport: MARKET_SCOPE.sport,
+      fixtures: fixturesWithScores,
+    });
   } catch (e) {
     if (e instanceof TxlineTokenMissing) {
         return NextResponse.json(
