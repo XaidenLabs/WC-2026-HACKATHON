@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { devnetConnection, oraPubkey, explorerUrl } from "@/lib/agent/onchain";
-import { parseCall } from "@/lib/agent/call";
+import { parseCall, parsePass } from "@/lib/agent/call";
 import { getScoresSnapshot, getFixtures } from "@/lib/txline/server";
 import { parseCurrentScore, type TxFixture, type TxScoreEvent } from "@/lib/txline/types";
 import type { Selection } from "@/lib/agent/strategy";
@@ -27,6 +27,12 @@ export async function GET(req: Request) {
       .filter((s) => s.memo && !s.err)
       .map((s) => ({ call: parseCall(s.memo as string), sig: s.signature, blockTime: s.blockTime }))
       .filter((x) => x.call !== null)
+      .sort((a, b) => (b.blockTime ?? 0) - (a.blockTime ?? 0));
+
+    const parsedPasses = sigs
+      .filter((s) => s.memo && !s.err)
+      .map((s) => ({ pass: parsePass(s.memo as string), sig: s.signature, blockTime: s.blockTime }))
+      .filter((x) => x.pass !== null)
       .sort((a, b) => (b.blockTime ?? 0) - (a.blockTime ?? 0));
 
     // Map "P1 v P2" → fixtureId so older calls (inscribed before we embedded FX#) still settle.
@@ -76,28 +82,38 @@ export async function GET(req: Request) {
       won: calls.filter((c) => c.status === "won").length,
       lost: calls.filter((c) => c.status === "lost").length,
       pending: calls.filter((c) => c.status === "pending").length,
+      passed: parsedPasses.length,
     };
 
     // Calls are research attestations, not capital positions. Never manufacture
     // a bankroll or P&L from memo history.
     const callsWithPnl = calls.map((c) => ({ ...c, stake: 0, pnl: null }));
+    const passes = parsedPasses.map((x) => ({
+      ...x.pass!,
+      timestamp: (x.blockTime ?? 0) * 1000,
+      signature: x.sig,
+      explorerUrl: explorerUrl(x.sig),
+    }));
 
     // Per-match view: return only this fixture's calls (no global bankroll/equity).
     if (filterFixtureId != null) {
       const scoped = callsWithPnl.filter((c) => c.fixtureId === filterFixtureId);
+      const scopedPasses = passes.filter((p) => p.fixtureId === filterFixtureId);
       return NextResponse.json({
         ok: true,
         calls: scoped,
+        passes: scopedPasses,
         record: {
           won: scoped.filter((c) => c.status === "won").length,
           lost: scoped.filter((c) => c.status === "lost").length,
           pending: scoped.filter((c) => c.status === "pending").length,
+          passed: scopedPasses.length,
         },
         metrics: null,
       });
     }
 
-    return NextResponse.json({ ok: true, calls: callsWithPnl, record, metrics: null });
+    return NextResponse.json({ ok: true, calls: callsWithPnl, passes, record, metrics: null });
   } catch (e) {
     return NextResponse.json({ ok: false, error: (e as Error).message }, { status: 500 });
   }

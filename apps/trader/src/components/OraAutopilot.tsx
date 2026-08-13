@@ -1,107 +1,130 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Power, Loader2, ExternalLink, Radio } from "lucide-react";
-import { cn } from "@/lib/ui";
+import Link from "next/link";
+import { useState } from "react";
+import { CheckCircle2, ChevronRight, Loader2, Search, Sparkles } from "lucide-react";
+import { useTraderWallet } from "@/hooks/useTraderWallet";
 
 type Cycle = {
-  ok: boolean; scanned: number; priced: number; valueFound: number; inscribed: number;
-  calls: { match: string; selection: string; odds: number; evPct: number; signature: string; explorerUrl: string }[];
-  passed: { match: string; reason: string; receipt?: string; explorerUrl?: string }[];
-  mandate?: { minEvPct: number; maxCallsPerCycle: number; maxCallsPerDay: number; fixedReferenceStake: number };
+  ok: boolean;
+  proposal?: { id: string; match: string; selection: string; quotedOdds: number; evPct: number } | null;
+  scan?: { fixturesFound: number; fixturesPriced: number; qualified: number };
   error?: string;
 };
-type Log = { time: string; msg: string; tone: "info" | "fire" | "pass" | "err"; url?: string };
 
-const INTERVAL_MS = 45_000;
+type Finding = { title: string; detail: string; tone: "neutral" | "positive" | "quiet" };
 
-/**
- * ORA Autopilot. Once armed, ORA runs its value model over live TxLINE markets on a loop and
- * inscribes value calls on Solana with no human input. In production the same endpoint runs on a
- * Vercel cron (see vercel.json); this panel makes the autonomy visible during a demo.
- */
 export default function OraAutopilot({ onCycle }: { onCycle?: () => void }) {
-  const [armed, setArmed] = useState(false);
+  const { authenticated, login, getAccessToken } = useTraderWallet();
   const [busy, setBusy] = useState(false);
-  const [logs, setLogs] = useState<Log[]>([]);
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
-  const add = (msg: string, tone: Log["tone"], url?: string) =>
-    setLogs((p) => [{ time: new Date().toLocaleTimeString(), msg, tone, url }, ...p].slice(0, 40));
+  const [step, setStep] = useState(0);
+  const [findings, setFindings] = useState<Finding[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  async function runCycle() {
+  async function runScan() {
+    if (!authenticated) { login(); return; }
+    if (busy) return;
     setBusy(true);
+    setError(null);
+    setFindings([]);
+    setStep(1);
     try {
-      const r = await fetch("/api/agent/autopilot", { headers: { "x-autopilot-ui": "1" }, cache: "no-store" });
-      const j = (await r.json()) as Cycle;
-      if (!j.ok) { add(`Cycle error: ${j.error ?? r.status}`, "err"); return; }
-      add(`Scanned ${j.scanned} markets · priced ${j.priced} · ${j.valueFound} with value`, "info");
-      if (j.inscribed === 0) add("No new value opportunities. ORA stood aside this cycle.", "pass");
-      for (const p of j.passed ?? []) add(`PASS · ${p.match}: ${p.reason}`, "pass", p.explorerUrl);
-      for (const c of j.calls) {
-        add(`◉ Backed ${c.selection} in ${c.match} @ ${c.odds} · EV ${c.evPct >= 0 ? "+" : ""}${c.evPct}% · inscribed on Solana`, "fire", c.explorerUrl);
+      const token = await getAccessToken();
+      if (!token) throw new Error("Your session expired. Sign in again.");
+      const response = await fetch("/api/trader/proposals", {
+        method: "POST",
+        cache: "no-store",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          "Idempotency-Key": `ora-ui:${crypto.randomUUID()}`,
+        },
+        body: JSON.stringify({ stake: 20 }),
+      });
+      setStep(2);
+      const cycle = await response.json() as Cycle;
+      if (!response.ok || !cycle.ok) throw new Error(cycle.error ?? "The scan could not finish.");
+      setStep(3);
+      const scan = cycle.scan;
+      const next: Finding[] = [
+        {
+          title: `Checked ${scan?.fixturesFound ?? 0} games`,
+          detail: `${scan?.fixturesPriced ?? 0} had enough live information for a fair comparison.`,
+          tone: "neutral",
+        },
+      ];
+      if (cycle.proposal) {
+        next.push({
+          title: cycle.proposal.match,
+          detail: `${cycle.proposal.selection} at ${cycle.proposal.quotedOdds.toFixed(2)}. ORA found a ${cycle.proposal.evPct}% value advantage.`,
+          tone: "positive",
+        });
+      } else {
+        next.push({
+          title: "No strong pick right now",
+          detail: "ORA found possible outcomes, but none had a price good enough to risk your balance.",
+          tone: "quiet",
+        });
       }
+      setFindings(next);
       onCycle?.();
-    } catch (e) {
-      add(`Network error: ${(e as Error).message}`, "err");
+    } catch (caught) {
+      setError((caught as Error).message);
     } finally {
       setBusy(false);
     }
   }
 
-  useEffect(() => {
-    if (!armed) { if (timer.current) clearInterval(timer.current); timer.current = null; return; }
-    const initial = setTimeout(() => { void runCycle(); }, 0);
-    timer.current = setInterval(runCycle, INTERVAL_MS);
-    return () => { clearTimeout(initial); if (timer.current) clearInterval(timer.current); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [armed]);
+  const steps = ["Checking today’s games", "Comparing likely outcomes", "Looking for useful prices"];
 
   return (
-    <div className="rounded-xl border border-white/10 bg-[#0a0a0a]">
-      <div className="flex items-center justify-between border-b border-white/5 px-4 py-2">
-        <span className="flex items-center gap-2 text-xs tracking-widest text-gray-400">
-          <Radio className="size-3" /> ORA AUTOPILOT
-        </span>
-        <span className={cn("flex items-center gap-1.5 font-mono text-[10px]", armed ? "text-emerald-400" : "text-gray-500")}>
-          <span className={cn("size-1.5 rounded-full", armed ? "bg-emerald-500 animate-pulse" : "bg-gray-600")} />
-          {armed ? `armed · every ${INTERVAL_MS / 1000}s` : "idle"}
-        </span>
-      </div>
+    <section className="border border-[#2b2d27] bg-[#11120f]" aria-labelledby="ora-scan-title">
+      <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(320px,1.15fr)]">
+        <div>
+          <span className="inline-flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[#ff650f]">
+            <Sparkles className="size-3.5" /> ORA scan
+          </span>
+          <h2 id="ora-scan-title" className="mt-4 max-w-md text-2xl font-black tracking-[-0.04em] text-[#f1f1ed] sm:text-3xl">
+            Find the games worth your attention.
+          </h2>
+          <p className="mt-3 max-w-lg text-sm leading-6 text-[#8d8f88]">
+            ORA checks today’s fixtures, compares likely outcomes with available prices, and only brings you picks that are worth reviewing.
+          </p>
+          <button type="button" onClick={() => void runScan()} disabled={busy} className="mt-6 inline-flex min-h-11 items-center gap-2 bg-[#ff650f] px-5 text-sm font-black text-[#0a0b09] transition hover:bg-[#ff7a2f] disabled:cursor-wait disabled:opacity-70">
+            {busy ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
+            {!authenticated ? "Sign in to scan" : busy ? steps[Math.max(0, step - 1)] : "Start ORA scan"}
+          </button>
+          <p className="mt-3 text-xs text-[#63655f]">A scan does not place a pick. You review the result first.</p>
+        </div>
 
-      <div className="p-4">
-        <p className="text-[11px] leading-relaxed text-gray-500">
-          ORA acts only at ≥4% expected value, with one call per cycle and three calls per day. Every
-          trade and every pass receives a Solana receipt, so restraint is auditable too.
-        </p>
-        <button
-          onClick={() => setArmed((v) => {
-            if (!v) add("Autopilot armed. ORA is now trading its value model on its own.", "info");
-            return !v;
-          })}
-          className={cn("mt-3 flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-bold transition-colors",
-            armed ? "bg-red-500/15 border border-red-500/40 text-red-400 hover:bg-red-500/25"
-              : "bg-emerald-500 text-black hover:bg-emerald-400")}>
-          {busy && armed ? <Loader2 className="size-4 animate-spin" /> : <Power className="size-4" />}
-          {armed ? "DISARM AUTOPILOT" : "ARM AUTOPILOT"}
-        </button>
-
-        <div className="mt-3 max-h-56 space-y-1.5 overflow-y-auto font-mono text-[11px]">
-          {logs.length === 0 && <p className="text-gray-600">Autopilot idle. Arm it to watch ORA trade itself.</p>}
-          {logs.map((l, i) => (
-            <div key={i} className="flex items-start gap-2">
-              <span className="shrink-0 text-gray-700">[{l.time}]</span>
-              <span className={cn("break-words",
-                l.tone === "fire" && "text-emerald-400",
-                l.tone === "pass" && "text-gray-500",
-                l.tone === "err" && "text-red-400",
-                l.tone === "info" && "text-gray-400")}>
-                {l.msg}
-                {l.url && <a href={l.url} target="_blank" rel="noopener noreferrer" className="ml-1 inline-flex items-center gap-0.5 text-gray-500 hover:text-emerald-400">tx <ExternalLink className="size-2.5" /></a>}
-              </span>
+        <div className="border border-[#262822] bg-[#0c0d0b] p-4 sm:p-5">
+          <p className="font-mono text-[9px] font-bold uppercase tracking-[0.13em] text-[#686a64]">What ORA finds</p>
+          {busy && (
+            <ol className="mt-5 space-y-4">
+              {steps.map((label, index) => {
+                const number = index + 1;
+                const complete = step > number;
+                const active = step === number;
+                return <li key={label} className={`flex items-center gap-3 text-sm ${complete ? "text-[#4ee58a]" : active ? "text-[#efefeb]" : "text-[#555751]"}`}>
+                  {complete ? <CheckCircle2 className="size-4" /> : active ? <Loader2 className="size-4 animate-spin text-[#ff650f]" /> : <span className="grid size-4 place-items-center border border-[#363832] font-mono text-[8px]">{number}</span>}
+                  {label}
+                </li>;
+              })}
+            </ol>
+          )}
+          {!busy && findings.length === 0 && !error && <p className="mt-5 text-sm leading-6 text-[#666861]">Your scan results will appear here in plain language.</p>}
+          {!busy && findings.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {findings.map((finding) => <article key={finding.title} className={`border p-4 ${finding.tone === "positive" ? "border-[#1f4a35] bg-[#0d1711]" : "border-[#292b25] bg-[#121310]"}`}>
+                <p className={`text-sm font-bold ${finding.tone === "positive" ? "text-[#4ee58a]" : "text-[#e1e2dd]"}`}>{finding.title}</p>
+                <p className="mt-2 text-xs leading-5 text-[#85877f]">{finding.detail}</p>
+              </article>)}
+              {findings.some((finding) => finding.tone === "positive") && <Link href="/dashboard#supervised-execution" className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[#ff650f] hover:text-[#ff8a49]">Review this pick <ChevronRight className="size-3.5" /></Link>}
             </div>
-          ))}
+          )}
+          {error && <div role="alert" className="mt-4 border border-[#552c25] bg-[#1b100d] p-3 text-xs leading-5 text-[#ff8b78]">{error}</div>}
         </div>
       </div>
-    </div>
+    </section>
   );
 }
