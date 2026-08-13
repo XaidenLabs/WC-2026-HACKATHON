@@ -8,7 +8,7 @@ import { cn, fetcher, kickoff } from "@/lib/ui";
 type Fixture = { FixtureId: number; Participant1: string; Participant2: string; StartTime: number; Competition: string };
 type Phase = "upcoming" | "live" | "finished";
 
-/** Live TxLINE market list — reused on the landing page and the ORA hub. Tap → per-match desk. */
+/** Live football market list, reused on the landing page and the ORA hub. */
 export default function MarketList({ limit = 12, className }: { limit?: number; className?: string }) {
   const [now, setNow] = useState(0);
   useEffect(() => {
@@ -18,7 +18,7 @@ export default function MarketList({ limit = 12, className }: { limit?: number; 
     return () => clearInterval(timer);
   }, []);
   const { data, error } = useSWR<{ ok: boolean; fixtures: Fixture[]; error?: string }>(
-    "/api/txline/fixtures", fetcher, { refreshInterval: 60_000 },
+    "/api/markets/fixtures", fetcher, { refreshInterval: 60_000 },
   );
   const marketsError = Boolean(error) || (data && data.ok === false);
 
@@ -38,7 +38,7 @@ export default function MarketList({ limit = 12, className }: { limit?: number; 
     <div className={cn("space-y-1.5", className)}>
       {markets.length === 0 && !marketsError && <p className="p-3 text-[11px] text-gray-600">Loading live fixtures…</p>}
       {marketsError && markets.length === 0 && (
-        <p className="p-3 text-[11px] text-yellow-500/80">Markets unavailable · TxLINE token may need refreshing.</p>
+        <p className="p-3 text-[11px] text-yellow-500/80">Markets unavailable. The football feed may need reconnecting.</p>
       )}
       {!marketsError && markets.length === 0 && data && (
         <p className="p-3 text-[11px] text-gray-600">No live or upcoming games in range.</p>
