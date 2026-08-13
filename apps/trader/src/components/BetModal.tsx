@@ -14,7 +14,7 @@ export default function BetModal({ fixture, onClose }: { fixture: BetFixture; on
   const router = useRouter();
   const { authenticated, login, getAccessToken, wallet, mutateWallet } = useTraderWallet();
   const { data: oddsData } = useSWR<{ ok: boolean; odds?: { home: { dec: number }; draw: { dec: number }; away: { dec: number } } }>(
-    `/api/txline/odds?fixtureId=${fixture.FixtureId}`, fetcher,
+    `/api/markets/odds?fixtureId=${fixture.FixtureId}`, fetcher,
   );
   const odds = oddsData?.odds;
 
@@ -72,7 +72,7 @@ export default function BetModal({ fixture, onClose }: { fixture: BetFixture; on
 
         {!authenticated ? (
           <div className="py-6 text-center">
-            <p className="mb-3 text-sm text-gray-400">Sign in to use the live-data sandbox. Quotes are rechecked against TxLINE when you place a position.</p>
+            <p className="mb-3 text-sm text-gray-400">Sign in to use the live-data sandbox. Prices are rechecked before you place a position.</p>
             <button onClick={login} className="rounded-md bg-emerald-500 px-4 py-2 text-xs font-bold text-black hover:bg-emerald-400">
               Sign in with email
             </button>
@@ -118,7 +118,7 @@ export default function BetModal({ fixture, onClose }: { fixture: BetFixture; on
 
             <button onClick={place} disabled={!sel || placing || (balance != null && stake > balance)}
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-500 py-2.5 text-sm font-bold text-black hover:bg-emerald-400 disabled:opacity-40">
-              {placing ? <><Loader2 className="size-4 animate-spin" /> Rechecking TxLINE quote…</> : `Open ${stake} USDC sandbox position`}
+              {placing ? <><Loader2 className="size-4 animate-spin" /> Rechecking price…</> : `Open ${stake} USDC sandbox position`}
             </button>
           </>
         )}
