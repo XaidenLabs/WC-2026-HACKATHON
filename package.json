@@ -7,8 +7,8 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "node api.js && turbo run dev",
-    "build": "node api.js && turbo run build && cp -R apps/trader/.next ./.next",
+    "dev": "node init && turbo run dev",
+    "build": "node init && turbo run build && cp -R apps/trader/.next ./.next",
     "lint": "turbo run lint"
   },
   "devDependencies": {
