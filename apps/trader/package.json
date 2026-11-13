@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "node init && next dev",
+    "build": "node init && next build",
+    "start": "node init && next start",
     "lint": "eslint",
     "test:supervision": "node --test src/lib/supervision/domain.test.ts",
     "test:ora": "node --test src/lib/ora/pick.test.ts src/lib/ora/engine-domain.test.ts",
