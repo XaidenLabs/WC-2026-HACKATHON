@@ -1,7 +1,4 @@
 # Secrets
-.env
-.env*
-.env.local
 !.env.example
 !**/.env.example
 *.keypair.json
@@ -48,6 +45,4 @@ DEMO_SCRIPTS*.md
 # Telegram bot subscriber lists
 bots/.subs-*.json
 .claude/
-branch_structure.json
-temp_auto_push.bat
-temp_interactive_push.bat
+config.bat
